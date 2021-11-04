@@ -43,32 +43,30 @@ void stack_cleanup(struct stack *s)
 void stack_stats(const struct stack *s)
 {
     printf("stats");
-    fprintf("%d,", s->push_count);
-    fprintf("%d,", s->pop_count);
+/*     fprintf("%d,", s->push_count);
+    fprintf("%d,", s->pop_count); */
 }
 
 int stack_push(struct stack *s, int c)
 {
-    if (is_full(s))
-    {
-        return printf("stack is already full");
-    }
+    if (is_full(s)) return 1;
     s->arr[++s->top] = c;
     s->push_count += 1;
-    return printf("pushed %d onto the stack", c);
+    return 0;
 }
 
 int stack_pop(struct stack *s)
 {
-    if (stack_empty)
-        s->arr[s->top--];
+    int temp = stack_peek(s);
+    if (stack_empty(s) != 0) return -1;
+    s->top--;
     s->pop_count += 1;
+    return temp;
 }
 
 int stack_peek(const struct stack *s)
 {
-    /* Moet er rekening gehouden worden met 
-    scenario waarbij de stack nog niet is aangemaakt */
+    if ( stack_empty(s) != 0 ) return -1;
     return s->arr[s->top];
 }
 
@@ -78,14 +76,23 @@ int stack_empty(const struct stack *s)
     {
         return 1;
     }
-    else if ( s->top == NULL )
+    else if ( s->top >= 0 )
     {
-        return -1;
+        return 0;
     }
-    return 0;
+    return -1;
 }
 
 size_t stack_size(const struct stack *s)
 {
     return s->top + 1;
+}
+
+void main(){
+    struct stack *s = stack_init(5);
+    stack_push(s, 5);
+    stack_pop(s);
+    stack_push(s, 5);
+    stack_size(s);
+ 
 }
