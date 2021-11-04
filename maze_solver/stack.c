@@ -30,7 +30,7 @@ struct stack *stack_init(size_t capacity)
 the top index = capacity*/
 int is_full(struct stack *s)
 {
-    return s->top == -1;
+    return (s->top >= 0 && (size_t)s->top == s->capacity);
 }
 
 void stack_cleanup(struct stack *s)
@@ -67,19 +67,25 @@ int stack_pop(struct stack *s)
 
 int stack_peek(const struct stack *s)
 {
+    /* Moet er rekening gehouden worden met 
+    scenario waarbij de stack nog niet is aangemaakt */
     return s->arr[s->top];
 }
 
 int stack_empty(const struct stack *s)
 {
-    if (s->top == -1)
+    if ( s->top == -1)
     {
         return 1;
+    }
+    else if ( s->top == NULL )
+    {
+        return -1;
     }
     return 0;
 }
 
 size_t stack_size(const struct stack *s)
 {
-    return sizeof(s->arr) / sizeof(s->arr[0]);
+    return s->top + 1;
 }
