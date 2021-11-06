@@ -233,3 +233,10 @@ int maze_row(const struct maze *m, int index) {
 int maze_col(const struct maze *m, int index) {
     return index % m->n;
 }
+
+void main(){
+    int row, col;
+    struct maze *m = maze_read();
+    maze_start(m,&row,&col);
+    printf("%d,%d",&row,&col);
+}
