@@ -34,52 +34,50 @@ int dfs_solve(struct maze *m)
         return NOT_FOUND;
     }
     // Link start and end coordinates to the tuple structs.
-    maze_start(m, start->r, start->c);
-    maze_destination(m, end->r, end->c);
+    maze_start(m, &start->r, &start->c);
+    maze_destination(m, &end->r, &end->c);
     // Intialize current position as start.
     current->r = start->r;
     current->c = current->c;
     
     // Check if the start position = the end position.
     if (start->r == end->r && start->c == end->c){
-        return start;
+        return 0;
     }
     // Create a stack for later use.
-    struct stack *s = stack_init(1000);
+    struct stack *s = stack_init(1000); // hoe groot moet de stack zijn
 
     /* Check for each possible moveset if it is a valid move, by
     looping through the possible movesets. */
     int moveset_size = sizeof(m_offsets)/sizeof(m_offsets[0]);
+
     for (int i = 0; i < moveset_size; i++){
         // Store coordinates of move to be taken in temp value. 
         int temp_r = current->r + m_offsets[i][0];
         int temp_c = current->c + m_offsets[i][1];
         // If coordinates are valid and position is not occupied move to that spot.
-        if (maze_valid_move(m, current->r, current->c)
-            && maze_get(m, current->r, current->c) == " "){
-                maze_set(m, current->r, current->c, "x");
-                // Renew current with the values stored in temp
+        if (maze_valid_move(m, temp_r, temp_c)
+            && maze_get(m, temp_r, temp_c) == ' '){
+                // Push new current location onto stack.
+                stack_push(s, current); // wat moet ik precies op de stack pushen?
+                maze_set(m, temp_r, temp_c, 'x');
+                // Renew current with the values stored in temp.
                 current->r = temp_r;
                 current->c = temp_c;
-                // Push new current location onto stack.
-                stack_push(s, current);
+                 // Check if the new move is the destination.
+                if (end->r == current->r && end->c == current->c){
+                    return stack_size(s);
+                };
+                // Reset i for new iteration.
                 i = 0;
             };
+        if (!maze_valid_move(m, temp_r, temp_c) || maze_get(m, temp_r, temp_c) != ' '){
+            if (stack_pop(s) == -1) return NOT_FOUND;
+            maze_set(m, current->r, current->c, ',');
+            stack_pop(s);
+            };
         };
-    };
-
-
-
-
-
-    
-
-    // maze[start point] hoe vind ik deze
-    // hoe loop ik vervolgens in de maze?
-
-    // hoe geef ik aan waar ik in de maze ben, hoe define ik de rows en columms
-    // hoe print ik dingen verveolgens naar de file
-}
+};
 
 int main(void)
 {
