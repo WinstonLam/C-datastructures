@@ -9,20 +9,23 @@
 #define ERROR -2
 
 // Tuple for start coordinates.
-static struct start{
+static struct coord
+{
     int r;
     int c;
-}*start;
+} * start;
 // Tuple for end coordinates.
-static struct end{
+static struct end
+{
     int r;
     int c;
-}*end;
+} * end;
 // Tuple for current coordinates.
-static struct current{
+static struct current
+{
     int r;
     int c;
-}*current;
+} * current;
 
 /* Solves the maze m.
  * Returns the length of the path if a path is found.
@@ -30,18 +33,22 @@ static struct current{
  */
 int dfs_solve(struct maze *m)
 {
-    if (m == NULL){
+    if (m == NULL)
+    {
         return NOT_FOUND;
     }
+    int test1;
+    int test2;
     // Link start and end coordinates to the tuple structs.
-    maze_start(m, &start->r, &start->c);
+    maze_start(m, &test1, &test2);
     maze_destination(m, &end->r, &end->c);
     // Intialize current position as start.
     current->r = start->r;
     current->c = current->c;
-    
+
     // Check if the start position = the end position.
-    if (start->r == end->r && start->c == end->c){
+    if (start->r == end->r && start->c == end->c)
+    {
         return 0;
     }
     // Create a stack for later use.
@@ -49,35 +56,43 @@ int dfs_solve(struct maze *m)
 
     /* Check for each possible moveset if it is a valid move, by
     looping through the possible movesets. */
-    int moveset_size = sizeof(m_offsets)/sizeof(m_offsets[0]);
+    int moveset_size = sizeof(m_offsets) / sizeof(m_offsets[0]);
 
-    for (int i = 0; i < moveset_size; i++){
-        // Store coordinates of move to be taken in temp value. 
+    for (int i = 0; i < moveset_size; i++)
+    {
+        // Store coordinates of move to be taken in temp value.
         int temp_r = current->r + m_offsets[i][0];
         int temp_c = current->c + m_offsets[i][1];
         // If coordinates are valid and position is not occupied move to that spot.
-        if (maze_valid_move(m, temp_r, temp_c)
-            && maze_get(m, temp_r, temp_c) == ' '){
-                // Push new current location onto stack.
-                stack_push(s, current); // wat moet ik precies op de stack pushen?
-                maze_set(m, temp_r, temp_c, 'x');
-                // Renew current with the values stored in temp.
-                current->r = temp_r;
-                current->c = temp_c;
-                 // Check if the new move is the destination.
-                if (end->r == current->r && end->c == current->c){
-                    return stack_size(s);
-                };
-                // Reset i for new iteration.
-                i = 0;
-            };
-        if (!maze_valid_move(m, temp_r, temp_c) || maze_get(m, temp_r, temp_c) != ' '){
-            if (stack_pop(s) == -1) return NOT_FOUND;
+        if (maze_valid_move(m, temp_r, temp_c) && maze_get(m, temp_r, temp_c) == ' ')
+        {
+            // Change coordinates into int value for the stack.
+            int int_loc = (temp_r * maze_size(m)) + temp_c;
+            // Push new current location onto stack.
+            stack_push(s, int_loc); // wat moet ik precies op de stack pushen?
+            maze_set(m, temp_r, temp_c, 'x');
+            // Renew current with the values stored in temp.
+            current->r = temp_r;
+            current->c = temp_c;
+            // Check if the new move is the destination.
+            if (end->r == current->r && end->c == current->c)
+            {
+                return stack_size(s);
+            }
+            // Reset i for new iteration.
+            i = 0;
+        }
+        if (!maze_valid_move(m, temp_r, temp_c) || maze_get(m, temp_r, temp_c) != ' ')
+        {
+            if (stack_pop(s) == -1)
+                return NOT_FOUND;
             maze_set(m, current->r, current->c, ',');
             stack_pop(s);
-            };
-        };
-};
+            current->r = maze_row(m, stack_peek(s));
+            current->c = maze_col(m, stack_peek(s));
+        }
+    }
+}
 
 int main(void)
 {
@@ -88,8 +103,6 @@ int main(void)
         printf("Error reading maze\n");
         return 1;
     }
-
-
     /* solve maze */
     int path_length = dfs_solve(m);
     if (path_length == ERROR)
@@ -111,5 +124,5 @@ int main(void)
     maze_output_ppm(m, "out.ppm");
 
     maze_cleanup(m);
-    return 0; 
+    return 0;
 }
