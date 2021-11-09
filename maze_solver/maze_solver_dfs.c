@@ -76,7 +76,7 @@ int dfs_solve(struct maze *m)
                 result = NOT_FOUND;
                 return result;
             }
-            maze_set(m, current_r, current_c, ',');
+            maze_set(m, current_r, current_c, '.');
             current_r = maze_row(m, stack_peek(s));
             current_c = maze_col(m, stack_peek(s));
             // Reset i for new iteration.
