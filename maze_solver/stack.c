@@ -11,15 +11,17 @@ struct stack
 
 struct stack *stack_init(size_t capacity)
 {
-    struct stack *stack = malloc(sizeof(struct stack));
+    struct stack *stack = (struct stack *)malloc(sizeof(struct stack));
     if (stack == NULL)
+    {
         return NULL;
+    }
     stack->capacity = capacity;
     stack->top = -1;
     stack->push_count = 0;
     stack->pop_count = 0;
     stack->max_elem = 0;
-    stack->arr = malloc(stack->capacity * sizeof(int));
+    stack->arr = (struct stack *)malloc(stack->capacity * sizeof(int));
     if (stack->arr == NULL)
     {
         free(stack);

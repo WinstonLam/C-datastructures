@@ -8,25 +8,6 @@
 #define NOT_FOUND -1
 #define ERROR -2
 
-// Tuple for start coordinates.
-static struct coord
-{
-    int r;
-    int c;
-} * start;
-// Tuple for end coordinates.
-static struct end
-{
-    int r;
-    int c;
-} * end;
-// Tuple for current coordinates.
-static struct current
-{
-    int r;
-    int c;
-} * current;
-
 /* Solves the maze m.
  * Returns the length of the path if a path is found.
  * Returns NOT_FOUND if no path is found and ERROR if an error occured.
@@ -35,63 +16,75 @@ int dfs_solve(struct maze *m)
 {
     if (m == NULL)
     {
-        return NOT_FOUND;
+        return ERROR;
     }
-    int test1;
-    int test2;
+    // Defining int's for initialization
+    int start_r, start_c, end_r, end_c, current_r, current_c, i, result;
     // Link start and end coordinates to the tuple structs.
-    maze_start(m, &test1, &test2);
-    maze_destination(m, &end->r, &end->c);
+    maze_start(m, &start_r, &start_c);
+    maze_set(m, start_r, start_c, 'S');
+    maze_destination(m, &end_r, &end_c);
+    maze_set(m, end_r, end_c, 'D');
     // Intialize current position as start.
-    current->r = start->r;
-    current->c = current->c;
+    current_r = start_r;
+    current_c = start_c;
 
     // Check if the start position = the end position.
-    if (start->r == end->r && start->c == end->c)
+    if (start_r == end_r && start_c == end_c)
     {
         return 0;
     }
     // Create a stack for later use.
-    struct stack *s = stack_init(1000); // hoe groot moet de stack zijn
+    struct stack *s = stack_init(2000);
 
     /* Check for each possible moveset if it is a valid move, by
     looping through the possible movesets. */
     int moveset_size = sizeof(m_offsets) / sizeof(m_offsets[0]);
-
-    for (int i = 0; i < moveset_size; i++)
+    i = 0;
+    while (i < moveset_size)
     {
         // Store coordinates of move to be taken in temp value.
-        int temp_r = current->r + m_offsets[i][0];
-        int temp_c = current->c + m_offsets[i][1];
+        int temp_r = current_r + m_offsets[i][0];
+        int temp_c = current_c + m_offsets[i][1];
         // If coordinates are valid and position is not occupied move to that spot.
-        if (maze_valid_move(m, temp_r, temp_c) && maze_get(m, temp_r, temp_c) == ' ')
+        if (maze_valid_move(m, temp_r, temp_c) && (maze_get(m, temp_r, temp_c) == ' ' ||
+                                                   maze_get(m, temp_r, temp_c) == 'D'))
         {
+            printf("%c", maze_get(m, temp_r, temp_c));
+            // Renew current with the values stored in temp.
+            current_r = temp_r;
+            current_c = temp_c;
+            // Reset i for new iteration.
+            i = -1;
             // Change coordinates into int value for the stack.
             int int_loc = (temp_r * maze_size(m)) + temp_c;
             // Push new current location onto stack.
-            stack_push(s, int_loc); // wat moet ik precies op de stack pushen?
+            stack_push(s, int_loc);
             maze_set(m, temp_r, temp_c, 'x');
-            // Renew current with the values stored in temp.
-            current->r = temp_r;
-            current->c = temp_c;
             // Check if the new move is the destination.
-            if (end->r == current->r && end->c == current->c)
+            if (end_r == temp_r && end_c == temp_c)
             {
-                return stack_size(s);
+                result = stack_size(s);
+                return result;
             }
-            // Reset i for new iteration.
-            i = 0;
         }
-        if (!maze_valid_move(m, temp_r, temp_c) || maze_get(m, temp_r, temp_c) != ' ')
+        else if (i == moveset_size - 1)
         {
-            if (stack_pop(s) == -1)
-                return NOT_FOUND;
-            maze_set(m, current->r, current->c, ',');
             stack_pop(s);
-            current->r = maze_row(m, stack_peek(s));
-            current->c = maze_col(m, stack_peek(s));
+            if (stack_peek(s) == -1)
+            {
+                result = NOT_FOUND;
+                return result;
+            }
+            maze_set(m, current_r, current_c, ',');
+            current_r = maze_row(m, stack_peek(s));
+            current_c = maze_col(m, stack_peek(s));
+            // Reset i for new iteration.
+            i = -1;
         }
+        i++;
     }
+    return result;
 }
 
 int main(void)
