@@ -129,7 +129,8 @@ int list_add_back(struct list *l, struct node *n) {
 }
 
 int list_node_get_value(struct node *n) {
-    if (n == NULL) return 0; // wat moet ik hier returnen?
+    if (n == NULL) return; 
+    if (n->data == NULL) return;// wat moet ik hier returnen?
     return n->data;
 }
 
@@ -281,4 +282,49 @@ struct list *list_cut_after(struct list *l, struct node *n) {
     n->next = NULL;
     temp->prev = NULL;
     return new_list;
+}
+
+// Sorts item return 1 if succesfull, 0 if not
+struct list* insertion_sort(int arr[], int arr_size){
+    // Initialize list and check if succesfull
+    struct list *l = list_init();
+    if (l == NULL) return NULL;
+    struct node *head = l->head;
+    // Loop through length of given array. And add node sorted to the list.
+    for (int i = 0; i < arr_size; i++){
+        // Create a node for ith element in the array.
+        struct node *n = list_new_node(arr[i]);
+
+        if (n == NULL) return NULL;
+        // Check if list is empty and ith node is the first element.
+  
+        struct node* temp = l->head;
+        while (temp != NULL && n->data > temp->data){
+            temp = temp->next;
+            printf("%d\n", temp->data);
+        }
+        if (l->head == NULL) list_add_front(l,n);
+        else if (n->data <= temp->data) list_insert_before(l,n,temp);
+        else list_insert_after(l,n,temp);
+      
+        
+               
+
+    }
+    return l;
+}
+
+void main(){
+    int arr[] = {5,3,4,1,2};
+    int arr_size = sizeof(arr) / sizeof(arr[0]);
+ 
+    struct list* l = insertion_sort(arr, arr_size);
+    struct node* n = l->head;
+    struct node* m = n->next;
+    if (m== NULL) printf("Big rip");
+    printf("%d\n",m->data);
+    while (n != NULL) {
+        printf("%d\n",n->data);
+        n = n->next;
+    }
 }
