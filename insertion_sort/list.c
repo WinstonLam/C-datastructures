@@ -91,9 +91,9 @@ struct node *list_prev(struct list *l, struct node *n) {
     if (l == NULL || n == NULL) return NULL;
     struct node *temp = l->head;
     if (temp == NULL) return NULL;
-    if (n->prev == NULL) return NULL;
+    if (n == temp) return NULL;
     if (list_node_present(l,n) == 0) return NULL;
-    return temp;
+    return n->prev;
 }
 
 int list_add_back(struct list *l, struct node *n) {
