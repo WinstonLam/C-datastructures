@@ -32,6 +32,8 @@ struct list {
 
 
 struct list *list_init(void) {
+    /* Allocate memory for the list, check if memory allocation was succesfull
+     and initialize values.*/
     struct list* d_list = malloc(sizeof(struct list));
     if (d_list == NULL) return NULL;
     d_list->length = 0;
@@ -41,16 +43,15 @@ struct list *list_init(void) {
 }
 
 struct node *list_new_node(int num) {
-    // Make node in the memory.
+    /* Allocate memory for a node, check if memory allocation was succesfull
+     and initialize values.*/
     struct node* n = malloc(sizeof(struct node));
     if (n == NULL) return NULL;
-    // Assign data to the node.
     n->data = num;
     n->next = NULL;
     n->prev = NULL;
     return n;
 }
-
 
 struct node *list_head(struct list *l) {
     if (l->length == 0) return NULL;
@@ -59,20 +60,25 @@ struct node *list_head(struct list *l) {
 
 struct node *list_next(struct node *n) {
     if (n == NULL) return NULL;
+    // Check if node is at the end.
     if (n->next == NULL) return NULL;
     return n->next;
 }
 
 int list_add_front(struct list *l, struct node *n) {
     if (l == NULL || n == NULL) return 1;
+    // If list is empty update head with value of n.
     if (l->head == NULL){
         l->head = n;
         l->length += 1;
         return 0;
     }
+    // Otherwise update head node and its pointers.
     struct node *temp = l->head;
+    // Update pointers of the node.
     temp->prev = n;
     n->next = temp;
+    // Update head node.
     l->head = n;
     l->length += 1;
     return 0;
@@ -81,8 +87,11 @@ int list_add_front(struct list *l, struct node *n) {
 struct node *list_tail(struct list *l) {
     if (l == NULL) return NULL;
     struct node *n = l->head;
+    // Check if list is empty.
     if (n == NULL) return NULL;
+    // Check if n is already the last node.
     if (n->next == NULL) return n;
+    // Traverse through the list till n->next is NULL.
     while (n->next != NULL) n = n->next; 
     return n;
 }
@@ -90,22 +99,29 @@ struct node *list_tail(struct list *l) {
 struct node *list_prev(struct list *l, struct node *n) {
     if (l == NULL || n == NULL) return NULL;
     struct node *temp = l->head;
+    // Check if list is empty.
     if (temp == NULL) return NULL;
+    // Check if node n is already the head node.
     if (n == temp) return NULL;
+    // Check if node n is present in the list.
     if (list_node_present(l,n) == 0) return NULL;
     return n->prev;
 }
 
 int list_add_back(struct list *l, struct node *n) {
     if (l == NULL || n == NULL) return 1;
+    // Store the tail of the list in temp value.
     struct node *temp = list_tail(l);
+    // Check if n is the first item.
     if (temp == NULL){
         l->head = n;
     }
+    // Otherwise update pointers to add n as the next item.
     else{
         temp->next = n; 
         n->prev = temp; 
     }
+    // Update pointers to the new tail.
     n->next = NULL;
     l->tail = n;
     l->length += 1;
@@ -125,21 +141,27 @@ int list_node_set_value(struct node *n, int value) {
 
 int list_unlink_node(struct list *l, struct node *n) {
     if (l == NULL || n == NULL) return 1;
+    // Check if list is empty.
     if (l->head == NULL) return 1;
     struct node* next = n->next;
     struct node* prev = n->prev;
+    // Check if n is the head node.
     if (n == l->head){
+        // If n is the only node in the list, adjust the head pointer.
         if (next == NULL){
             l->head = NULL;
             l->length -= 1;
             return 0;
         }
+        /* If there are more elements, 
+        increment the head pointer to next node and adjust node pointers*/
         l->head = next;
         n->next = NULL;
         next->prev = NULL;
         l->length -= 1;
         return 0;
     }
+    // If n is the last node, decrement the tail pointer and adjust node pointers.
     if (n == l->tail){
         l->tail = prev;
         n->prev = NULL;
@@ -147,6 +169,8 @@ int list_unlink_node(struct list *l, struct node *n) {
         l->length -= 1;
         return 0;
     } 
+    /* If node is neither at front or end, but is somewhere in the list,
+    adjust the node pointers and relink it's previous and next node with eachoter.*/
     if (list_node_present(l,n) == 1){
         prev->next = next;
         next->prev = prev;
@@ -167,11 +191,13 @@ int list_cleanup(struct list *l) {
     if (l == NULL) return 1;
     struct node* n = l->head;
     struct node* temp = n;
+    // Traverse through the list and free all the nodes.
     while (n != NULL){
         temp = n;
         n = n->next;
         free(temp);
     }  
+    // Free the list as last.
     free(l);
     return 0;
 }
@@ -179,6 +205,9 @@ int list_cleanup(struct list *l) {
 int list_node_present(struct list *l, struct node *n) {
     if (l == NULL || n == NULL) return -1;
     struct node* temp = l->head;  
+    /* Start from head and traverse through the list,
+    until temp value == n node while incrementing temp. 
+    If not found reset i to 0 and return. */
     int i = 1;
     while (temp != n){
         temp = temp->next;
@@ -192,10 +221,13 @@ int list_node_present(struct list *l, struct node *n) {
 
 int list_insert_after(struct list *l, struct node *n, struct node *m) {
      if (l == NULL || n == NULL || m == NULL) return 1;
+     // Check if m is in the list and if n is not in the list.
      if (list_node_present(l,m) == 0) return 1;
      if (list_node_present(l,n) == 1) return 1;
+     // Update node pointers.
      m->next = n;
      n->prev = m;
+     // If m was the tail, increment the tail pointer to n.
      if (m == l->tail) l->tail = n; 
      l->length += 1;
      return 0;
@@ -203,10 +235,13 @@ int list_insert_after(struct list *l, struct node *n, struct node *m) {
 
 int list_insert_before(struct list *l, struct node *n, struct node *m) {
     if (l == NULL || n == NULL || m == NULL) return 1;
+    // Check if m is in the list and if n is not in the list.
     if (list_node_present(l,m) == 0) return 1;
     if (list_node_present(l,n) == 1) return 1;
+    // Update node pointers.
     m->prev = n;
     n->next = m;
+    // If m was the head, decrement the head pointer to n.
     if (n == l->head) l->head = n;
     l->length += 1;
     return 0;
@@ -220,6 +255,8 @@ size_t list_length(struct list *l) {
 struct node *list_get_ith(struct list *l, size_t i) {
     if (l == NULL) return NULL;
     if (l->length < i) return NULL;
+    /* Use x as variable to stop at ith spot in the list, by incrementing it.
+    Traverse through the list from head node untill x is same as ith position. */
     size_t x = 0;
     struct node* n = l->head;
     while (x != i){
@@ -232,28 +269,16 @@ struct node *list_get_ith(struct list *l, size_t i) {
 struct list *list_cut_after(struct list *l, struct node *n) {
     if (l == NULL || n == NULL) return NULL;
     struct node* temp = n->next;
+    // Create new list and check if memory allocation was succesfull.
     struct list* new_list = list_init();
     if (new_list == NULL) return NULL;
-
+    // Update tail pointer of first half.
     l->tail = n;
+    // Set head and tail pointer for second half.
     new_list->head = temp;
     new_list->tail = list_tail(new_list);
-
+    // Update node pointers
     n->next = NULL;
     temp->prev = NULL;
     return new_list;
 }
-
-/* void main(){
-    struct list* test = list_init();
-    struct node* n = list_new_node(29);
-    struct node* n1 = list_new_node(1);
-    struct node* n2 = list_new_node(7);
-    struct node* n3 = list_new_node(6);
-    struct node* n4 = list_new_node(5);
-    list_add_front(test,n);
-    list_add_front(test,n1);
-   
-    list_add_back(test,n4);
-    printf("%d",test->length);
-} */
