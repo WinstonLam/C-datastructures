@@ -27,6 +27,7 @@ struct config {
     int zip_alternating;
 };
 
+
 int parse_options(struct config *cfg, int argc, char *argv[]) {
     memset(cfg, 0, sizeof(struct config));
     int c;
@@ -52,40 +53,71 @@ int parse_options(struct config *cfg, int argc, char *argv[]) {
     return 0;
 }
 
-static struct list *sort(struct list *l){
-    if (l == NULL) return NULL;
-    
-    struct node *curr = list_head(l);
-    size_t i = 0;
-
-    
+static struct list *sort(struct list *unsorted){
+    if (unsorted == NULL) return NULL;
+    // Initiate a current node at head of unsorted list.
+    struct node *curr = list_head(unsorted);
+    // Traverse through the unsorted list and updating the current node.
     while (curr != NULL){
-        printf("curr = %d\n",list_node_get_value(curr));
-        
-        struct node *temp = list_head(l);
+        // Create a temp value which will compare the curr value for all nodes in the list.
+        struct node *temp = list_head(unsorted);
+        // Save the next node of current so this does not get mixed up when node is unlinked.
         struct node *next = list_next(curr);
         // Start from the head of sorted list.
         while (temp != NULL){
-            // If given value in the unsorted list is less or equal insert before current position.
-           
+            // If given value in the unsorted list is higher insert after current position.
             if (list_node_get_value(curr) > list_node_get_value(temp)){
-                printf("STOP curr = %d, komt achter %d\n",list_node_get_value(curr), list_node_get_value(temp));
-                list_unlink_node(l,curr);
-                list_insert_after(l, curr, temp);
+                // Unlink the node in current position and move it behind temp position.
+                list_unlink_node(unsorted,curr);
+                list_insert_after(unsorted, curr, temp);
             }
-            // Move current node to next node of the sorted list. 
-
+            // Move temp node to next node to compare the next one.
             temp = list_next(temp);
-         
-        
         }
-        
+        // Iterate current to next of current.
         curr = next;
-        i++;
-        
-
     }
-    return l;
+    return unsorted;
+}
+static struct list *remove_odd(struct list *sorted){
+    if (sorted == NULL) return NULL;
+    struct node *curr = list_head(sorted);
+    while (curr != NULL){
+        struct node *next = list_next(curr);
+        if ((list_node_get_value(curr) % 2) != 0){
+            list_unlink_node(sorted,curr);
+            list_free_node(curr);
+        }
+        curr = next;
+    }
+    return sorted;
+}
+ 
+static struct list *sort_d(struct list *unsorted){
+    if (unsorted == NULL) return NULL;
+    // Initiate a current node at head of unsorted list.
+    struct node *curr = list_head(unsorted);
+    // Traverse through the unsorted list and updating the current node.
+    while (curr != NULL){
+        // Create a temp value which will compare the curr value for all nodes in the list.
+        struct node *temp = list_head(unsorted);
+        // Save the next node of current so this does not get mixed up when node is unlinked.
+        struct node *next = list_next(curr);
+        // Start from the head of sorted list.
+        while (temp != NULL){
+            // If given value in the unsorted list is higher insert after current position.
+            if (list_node_get_value(curr) > list_node_get_value(temp)){
+                // Unlink the node in current position and move it behind temp position.
+                list_unlink_node(unsorted,curr);
+                list_insert_after(unsorted, curr, temp);
+            }
+            // Move temp node to next node to compare the next one.
+            temp = list_next(temp);
+        }
+        // Iterate current to next of current.
+        curr = next;
+    }
+    return unsorted;
 }
  
 
@@ -94,33 +126,32 @@ int main(int argc, char *argv[]) {
     if (parse_options(&cfg, argc, argv) != 0) {
         return 1;
     }
+    
+   
     struct list *l = list_init();
     if (l == NULL) return 0;
     
     while (fgets(buf, BUF_SIZE, stdin)) {
+        
+        char *token;
+        token = strtok(buf, " ");
 
-        int num = atoi(buf); 
-        struct node *n = list_new_node(num);
-        if (n == NULL) return 0;
-        list_add_front(l,n);
+        while (token) {
+            long int num = strtol(token, NULL, 0);
+            struct node *n = list_new_node((int)num);
+            if (n == NULL) return 0;
+            list_add_front(l,n);
+            token = strtok(NULL, " ");
+        }
     }
-
-
-    struct list *unsorterd = l;
-    struct node *x = list_head(unsorterd);
-    while (x != NULL){
-        printf("list 1: %d\n",list_node_get_value(x));
-        x = list_next(x);
+ 
+    sort(l); 
+    remove_odd(l);
+    struct node *head = list_head(l);
+    while (head != NULL){
+        printf("%d\n",list_node_get_value(head));
+        head = list_next(head);
     }
-     printf("\n");
-
-    struct list *sorted = sort(l); 
-    struct node *y = list_head(sorted);
-    while (y != NULL){
-        printf("list 2: %d\n",list_node_get_value(y));
-        y    = list_next(y);
-    }
-     
     list_cleanup(l);
     
 
