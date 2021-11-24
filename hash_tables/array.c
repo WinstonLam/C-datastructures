@@ -16,7 +16,8 @@ struct array *array_init(unsigned long initial_capacity) {
     a->arr = malloc(initial_capacity * sizeof(int));
     if (a->arr == NULL) return NULL;
 
-    a->size = 0;
+    a->size = initial_capacity;
+    a->used = 0;
 
     return a;
 }
@@ -31,7 +32,7 @@ void array_cleanup(struct array *a) {
 int array_get(struct array *a, unsigned long index) {
     if (a == NULL) return -1;
 
-    if (index > a->size) return -1;
+    if (index >= a->size) return -1;
 
     return a->arr[index];
 }
@@ -43,12 +44,12 @@ int array_get(struct array *a, unsigned long index) {
 int array_append(struct array *a, int elem) {
     if (a == NULL) return 0;
 
-    unsigned long index = a->used + 1;
+    unsigned long index = a->used;
     // Is dit de jusite wijze om de realloc te gebruiken.
-    if (index < a->size)  a->arr = realloc(a->arr, (a->size * 2) * sizeof(int));
+    if (index >= a->size)  a->arr = realloc(a->arr, (a->size * 2) * sizeof(int));
 
     a->arr[index++] = elem;
-
+    a->used++;
     return a->arr[index];
 }
 
