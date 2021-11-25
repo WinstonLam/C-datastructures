@@ -36,11 +36,14 @@ struct node *node_init(char *key){
     
     struct node *n = malloc(sizeof(struct node));
     if (n == NULL) return NULL;
+
     n->value = array_init(1000); 
+
     if (n->value == NULL) {
-        printf("array init failed\n");
+        free(n);
         return NULL;
     }
+
     n->key = key;
     n->next = NULL;
     return n;
@@ -59,6 +62,7 @@ struct table *table_init(unsigned long capacity,
     if (t == NULL) return NULL;
     
     t->capacity = capacity;
+    t->load = 0;
     t->max_load_factor = max_load_factor;
     t->hash_func = hash_func;
     
@@ -69,11 +73,14 @@ struct table *table_init(unsigned long capacity,
 
 static struct table *resize (struct table *t){
     if (t == NULL) return NULL;
+    printf("old: %ld\n",t->capacity);
+    
 
     unsigned long new_capacity = t->capacity * 2;
-
+    
     struct table *new_t = table_init(new_capacity, t->max_load_factor, t->hash_func);
     if (new_t == NULL) return NULL;
+    printf("new %ld\n", new_capacity);
 
     long unsigned int i;
     for (i = 0; i < t->capacity; i++){
@@ -93,10 +100,8 @@ int table_insert(struct table *t, char *key, int value) {
     char* string = malloc((strlen(key) + 1) * sizeof(char));
     if (string == NULL) return 1;
     strcpy(string, key);
-    
-    // Initialize node which is to be added in the hash table.
-    struct node *n = node_init(string);
-    if (n == NULL) return 1;
+
+    printf("table load factor %f\n",table_load_factor(t));
 
     // Check if max load factor is reached, if so reallocate the hash table array.  
     if( table_load_factor(t) >= t->max_load_factor ) {
@@ -111,13 +116,21 @@ int table_insert(struct table *t, char *key, int value) {
     if (t->array[index] != NULL){
         array_append(t->array[index]->value, value);
         t->load++;
-        printf("succesfully appended to index %s\n",t->array[index]->key);
+        printf("A: succesfully appended to index %s\n",t->array[index]->key);
         return 0;
     }
 
+    // Initialize node which is to be added in the hash table since it is not in the table yet.
+    struct node *n = node_init(string);
+    if (n == NULL) return 1;
+
     // Add struct node n to the specified index in the hash table.
     t->array[index] = n;
-    printf("succesfully appended to index %s\n",t->array[index]->key);
+    // Append value to newly added struct node.
+    array_append(t->array[index]->value, value);
+    t->load++;
+
+    printf("B: succesfully appended new index %s\n",t->array[index]->key);
     return 0; 
 }
 
@@ -127,15 +140,21 @@ static struct node *get_node(struct table *t, char *key){
     if (t == NULL) return NULL;
 
     struct node* n;
-    // Is er een betere manier om de node te achterhalen.
+    
     for (long unsigned int i = 0; i < t->capacity; i++){
-        if (t->array[i]->key == key){
-            n = t->array[i];
-            break;
+        struct node *current = t->array[i];
+        while (current != NULL){
+            
+            if (strcmp(t->array[i]->key, key) == 0){
+                n = t->array[i];
+                return n;
             }
+            current = current->next;
+        }
     } 
-    if (n == NULL) return NULL;
-    return n;
+
+    printf("string %s\n", n->key);
+    return NULL;
 }
 
 struct array *table_lookup(struct table *t, char *key) {
@@ -145,12 +164,13 @@ struct array *table_lookup(struct table *t, char *key) {
 
     if (n == NULL) return NULL;
 
+
     return n->value;
 }
 
 double table_load_factor(struct table *t) {
     if (t == NULL) return 0;
-    return (double)(t->load / t->capacity);
+    return ((double)t->load / (double)t->capacity);
 }
 
 int table_delete(struct table *t, char *key) {
@@ -165,6 +185,8 @@ int table_delete(struct table *t, char *key) {
 
 void table_cleanup(struct table *t) {
     if (t == NULL) return;
+    // clean array in nodes
+    // clean nodes
     free(t->array);
     free(t);
     return;
