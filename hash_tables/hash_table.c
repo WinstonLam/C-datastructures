@@ -67,6 +67,24 @@ struct table *table_init(unsigned long capacity,
     return t;
 }
 
+static struct table *resize (struct table *t){
+    if (t == NULL) return NULL;
+
+    unsigned long new_capacity = t->capacity * 2;
+
+    struct table *new_t = table_init(new_capacity, t->max_load_factor, t->hash_func);
+    if (new_t == NULL) return NULL;
+
+    long unsigned int i;
+    for (i = 0; i < t->capacity; i++){
+        if (t->array[i] != NULL){
+            new_t->array[i] = t->array[i];
+        }
+    }
+    free(t);
+    return new_t;
+}
+
 int table_insert(struct table *t, char *key, int value) {
     printf("Inserting %d\n", value);
     if (t == NULL) return 1;
@@ -82,10 +100,8 @@ int table_insert(struct table *t, char *key, int value) {
 
     // Check if max load factor is reached, if so reallocate the hash table array.  
     if( table_load_factor(t) >= t->max_load_factor ) {
-        t->array = realloc(t->array, ( t->capacity * 2) * sizeof(struct node*));
-        if (t->array == NULL) return 1;
-
-        t->capacity = t->capacity * 2;
+        struct table *t = resize(t);
+        if (t == NULL) return 1;
     }
     
     // Store hashed key in an index that fits in the capacity of the array.
