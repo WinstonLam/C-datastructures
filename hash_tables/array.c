@@ -40,7 +40,7 @@ int array_get(struct array *a, unsigned long index) {
     if (a == NULL || a->arr == NULL) return -1;
 
     // Check if index is out of bounds.
-    if ((index + 1) > a->size) return -1;
+    if (index > a->size) return -1;
 
     return a->arr[index];
 }
