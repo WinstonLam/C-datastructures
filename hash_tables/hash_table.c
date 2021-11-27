@@ -71,28 +71,42 @@ struct table *table_init(unsigned long capacity,
     return t;
 }
 
-static struct table *resize (struct table *t){
+static struct array **resize (struct table *t){
+    
     if (t == NULL) return NULL;
 
-    printf("load: %ld\n", t->load);
-    printf("old %ld\n", t->capacity);
-    unsigned long new_capacity = t->capacity * 2;
-    
+    struct array **new_arr = 
 
-    struct table *new_t = table_init(new_capacity, t->max_load_factor, t->hash_func);
-    if (new_t == NULL) return NULL;
-    printf("new %ld\n", new_capacity);
-    printf("first item %s\n", t->array[0]->key);
-    long unsigned int i;
-    
-    for (i = 0; i < t->capacity; i++){
+    t->array = realloc(t->array, (t->capacity * 2) * sizeof(struct node));
+    /* struct array **new_arr = array_init(t->capacity * 2);
+    if (new_arr == NULL) return NULL;
+
+    unsigned long i = 0;
+  
+    for (i; i < t->capacity; i++){
+        
         if (t->array[i] != NULL){
-            new_t->array[i] = t->array[i];
+            new_arr[i] = t->array[i];
+        } 
+    }
+    
+    t->array = new_arr; */
+      unsigned long i;
+    for (i = 0; i < t->capacity; i++){
+
+        struct node *current = t->array[i];
+        
+        while (current != NULL){
+            struct node* temp = current;
+            current = current->next;
+
+            array_cleanup(temp->value);
+            free(temp->key);
+            free(temp);
         }
     }
-    printf("first item %s\n", t->array[0]->key);
-    table_cleanup(t);
-    return new_t;
+    
+    return t;
 }
 
 int table_insert(struct table *t, char *key, int value) {
@@ -107,23 +121,25 @@ int table_insert(struct table *t, char *key, int value) {
 
     // Check if max load factor is reached, if so reallocate the hash table array.  
     if( table_load_factor(t) >= t->max_load_factor ) {
-        printf("table load %ld\n",t->load);
-        struct table *new_t = resize(t);
-        struct table *t = new_t;
-        if (t == NULL) {
+        printf("changed old capacity %ld ",t->capacity);
+        t->array = resize(t);
+        if (t->array == NULL) {
             free(string);
             return 1;
         }
-        printf("test %ld\n", new_t->load);
-    }
     
+      
+        printf("to new capacity %ld\n", t->capacity);
+        printf("new table load factor %f\n",table_load_factor(t));
+    }
+ 
     // Store hashed key in an index that fits in the capacity of the array.
     unsigned long index = t->hash_func((unsigned char *)string) % t->capacity;
-    
+    printf("index is %ld\n", index);
     // Initialize node which is to be added in the hash table since it is not in the table yet.
     struct node *n = node_init(string);
     if (n == NULL) return 1;
-
+    printf("table load factor %f\n",table_load_factor(t));
     struct node* temp = t->array[index];
     // If index is already in hash table, append value to existing struct node.
     if (temp != NULL){
@@ -233,6 +249,7 @@ int table_delete(struct table *t, char *key) {
         free(current->key);
         array_cleanup(current->value);
         free(current);
+        return 0;
     } 
 }
 
@@ -259,7 +276,7 @@ void table_cleanup(struct table *t) {
     free(t);
     return;
 }
- void main(){
+/*  void main(){
  struct table *t;
     t = table_init(2, 0.6, hash_too_simple);
     
@@ -281,4 +298,4 @@ void table_cleanup(struct table *t) {
     printf("%d\n",array_get(table_lookup(t, a), 0));
     printf("%d\n",array_get(table_lookup(t, b), 0));
 
-} 
+}  */
