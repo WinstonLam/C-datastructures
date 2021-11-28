@@ -71,30 +71,43 @@ struct table *table_init(unsigned long capacity,
     return t;
 }
 
-static struct array **resize (struct table *t){
+static struct node **resize (struct table *t){
     
     if (t == NULL) return NULL;
 
-    struct array **new_arr = 
+   
+    struct node **old_arr = t->array;
+    struct node **new_arr = calloc(t->capacity, sizeof(struct node *));
 
-    t->array = realloc(t->array, (t->capacity * 2) * sizeof(struct node));
-    /* struct array **new_arr = array_init(t->capacity * 2);
+    t->array = new_arr;
     if (new_arr == NULL) return NULL;
-
+    
     unsigned long i = 0;
   
-    for (i; i < t->capacity; i++){
-        
-        if (t->array[i] != NULL){
-            new_arr[i] = t->array[i];
-        } 
+    for (i; i < (t->capacity / 2); i++){
+        struct node *index = old_arr[i];
+        if (index != NULL){
+
+            
+            for (unsigned long j; j < array_size(index->value); j++){
+
+                struct node *next = index->next;
+                table_insert(t, index->key, array_get(index->value, j));
+                while (next != NULL){
+                    printf("test %s\n\n\n", index->next->key);
+                    for (unsigned long l; l < array_size(index->next->value); l++){
+                        table_insert(t, index->next->key, array_get(index->next->value, l));
+                    }
+                    next = next->next;
+                }
+            }    
+        }
     }
     
-    t->array = new_arr; */
-      unsigned long i;
-    for (i = 0; i < t->capacity; i++){
+    unsigned long k;
+    for (k = 0; k < t->capacity; k++){
 
-        struct node *current = t->array[i];
+        struct node *current = old_arr[k];
         
         while (current != NULL){
             struct node* temp = current;
@@ -106,8 +119,12 @@ static struct array **resize (struct table *t){
         }
     }
     
-    return t;
+    free(old_arr);
+
+
+    return new_arr;
 }
+
 
 int table_insert(struct table *t, char *key, int value) {
     printf("Inserting %d\n", value);
@@ -119,19 +136,26 @@ int table_insert(struct table *t, char *key, int value) {
     strcpy(string, key);
     printf("table load factor %f\n",table_load_factor(t));
 
+    struct node **new_arr;
     // Check if max load factor is reached, if so reallocate the hash table array.  
     if( table_load_factor(t) >= t->max_load_factor ) {
+        
         printf("changed old capacity %ld ",t->capacity);
-        t->array = resize(t);
-        if (t->array == NULL) {
+        t->capacity = t->capacity * 2;
+        new_arr = resize(t);
+        if (new_arr == NULL) {
             free(string);
             return 1;
         }
+     
+        t->array = new_arr;
     
       
         printf("to new capacity %ld\n", t->capacity);
         printf("new table load factor %f\n",table_load_factor(t));
+        printf("index 1 = %s", t->array[0]->key);
     }
+
  
     // Store hashed key in an index that fits in the capacity of the array.
     unsigned long index = t->hash_func((unsigned char *)string) % t->capacity;
@@ -139,7 +163,6 @@ int table_insert(struct table *t, char *key, int value) {
     // Initialize node which is to be added in the hash table since it is not in the table yet.
     struct node *n = node_init(string);
     if (n == NULL) return 1;
-    printf("table load factor %f\n",table_load_factor(t));
     struct node* temp = t->array[index];
     // If index is already in hash table, append value to existing struct node.
     if (temp != NULL){
@@ -180,7 +203,9 @@ static struct node *get_node(struct table *t, char *key){
     if (t == NULL) return NULL;
    
 
-    if (t->array == NULL) return NULL;
+    if (t->array == NULL) {
+        printf("t-array is leeg\n");
+        return NULL;}
     // Loop through the array of t to check each index.
     for (unsigned long int i = 0; i < t->capacity; i++){
 
@@ -189,7 +214,9 @@ static struct node *get_node(struct table *t, char *key){
         struct node *current = t->array[i];
         // Check for if desired key is chained in the linked list.
         while (current != NULL){
+            printf("string %s\n", current->key);
             // Compare key of ith node with given key.
+            printf("string %s\n", key);
             if (strcmp(current->key, key) == 0){
                 return current;
             }
@@ -276,7 +303,7 @@ void table_cleanup(struct table *t) {
     free(t);
     return;
 }
-/*  void main(){
+/* void main(){
  struct table *t;
     t = table_init(2, 0.6, hash_too_simple);
     
@@ -294,8 +321,14 @@ void table_cleanup(struct table *t) {
     table_insert(t, b, 5);
     table_insert(t, c, 7);
     
+    if (get_node(t, a) == NULL){
+        printf("LEEG\n");
+    }
+    if(table_lookup(t, a) == NULL){
+        printf("LEEG\n");
+    }
 
     printf("%d\n",array_get(table_lookup(t, a), 0));
     printf("%d\n",array_get(table_lookup(t, b), 0));
 
-}  */
+}   */
