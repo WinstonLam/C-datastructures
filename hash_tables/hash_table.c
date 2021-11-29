@@ -80,32 +80,41 @@ static struct node **resize (struct table *t){
     struct node **new_arr = calloc(t->capacity, sizeof(struct node *));
 
     t->array = new_arr;
+    t->load = 0;
+    
     if (new_arr == NULL) return NULL;
     
     unsigned long i = 0;
-  
+    printf("------------------------------------\n");
+    printf("\nInitialize resize\n\n");
     for (i; i < (t->capacity / 2); i++){
-        struct node *index = old_arr[i];
-        if (index != NULL){
 
-            
+        struct node *index = old_arr[i];
+
+        if (index == NULL) continue;
+        else if (index != NULL){
+            printf("Add node %s to new array\n",old_arr[i]->key);
             for (unsigned long j; j < array_size(index->value); j++){
+                 
+                
+                table_insert(t, index->key, array_get(index->value, j));
+                
 
                 struct node *next = index->next;
-                table_insert(t, index->key, array_get(index->value, j));
-                while (next != NULL){
-                    printf("test %s\n\n\n", index->next->key);
-                    for (unsigned long l; l < array_size(index->next->value); l++){
-                        table_insert(t, index->next->key, array_get(index->next->value, l));
+                
+                    while (next != NULL){
+                        table_insert(t, index->next->key, array_get(index->next->value, j));
+                        next = next->next;
+                        if (next != NULL) printf("next of current = %s\n",next->key);
+                        printf("done\n");
                     }
-                    next = next->next;
                 }
             }    
         }
-    }
+    
     
     unsigned long k;
-    for (k = 0; k < t->capacity; k++){
+    for (k = 0; k < (t->capacity / 2); k++){
 
         struct node *current = old_arr[k];
         
@@ -127,20 +136,19 @@ static struct node **resize (struct table *t){
 
 
 int table_insert(struct table *t, char *key, int value) {
-    printf("Inserting %d\n", value);
+    printf("Inserting index %s with value %d\n", key, value);
     if (t == NULL) return 1;
 
     // Copy the key given in a string value.
     char* string = malloc((strlen(key) + 1) * sizeof(char));
     if (string == NULL) return 1;
     strcpy(string, key);
-    printf("table load factor %f\n",table_load_factor(t));
+    printf("current load = %f and load factor = %f\n",t->load,table_load_factor(t));
 
     struct node **new_arr;
     // Check if max load factor is reached, if so reallocate the hash table array.  
     if( table_load_factor(t) >= t->max_load_factor ) {
         
-        printf("changed old capacity %ld ",t->capacity);
         t->capacity = t->capacity * 2;
         new_arr = resize(t);
         if (new_arr == NULL) {
@@ -149,11 +157,10 @@ int table_insert(struct table *t, char *key, int value) {
         }
      
         t->array = new_arr;
-    
-      
-        printf("to new capacity %ld\n", t->capacity);
         printf("new table load factor %f\n",table_load_factor(t));
-        printf("index 1 = %s", t->array[0]->key);
+        printf("\nFinish resize\n\n");
+        printf("------------------------------------\n");
+    
     }
 
  
@@ -175,12 +182,12 @@ int table_insert(struct table *t, char *key, int value) {
             temp->next = n;
             array_append(temp->next->value, value);
             t->load++;
-            printf("A0: succesfully appended %s to index %s\n",temp->next->key, temp->key);
+            printf("A: succesfully chained %s to index %s\n",temp->next->key, temp->key);
             return 0;
         } else {
             array_append(temp->value, value);
             t->load++;
-            printf("A: succesfully appended to index %s\n",t->array[index]->key);
+            printf("B: succesfully appended to index %s\n",t->array[index]->key);
             return 0;
         }
         
@@ -193,7 +200,7 @@ int table_insert(struct table *t, char *key, int value) {
     array_append(t->array[index]->value, value);
     t->load++;
 
-    printf("B: succesfully appended new index %s\n",t->array[index]->key);
+    printf("C: succesfully appended new index %s\n",t->array[index]->key);
     return 0; 
 }
 
@@ -214,9 +221,8 @@ static struct node *get_node(struct table *t, char *key){
         struct node *current = t->array[i];
         // Check for if desired key is chained in the linked list.
         while (current != NULL){
-            printf("string %s\n", current->key);
+          
             // Compare key of ith node with given key.
-            printf("string %s\n", key);
             if (strcmp(current->key, key) == 0){
                 return current;
             }
@@ -303,8 +309,9 @@ void table_cleanup(struct table *t) {
     free(t);
     return;
 }
-/* void main(){
+void main(){
  struct table *t;
+    printf("\nTEST 1\n\n");
     t = table_init(2, 0.6, hash_too_simple);
     
 
@@ -320,15 +327,42 @@ void table_cleanup(struct table *t) {
     table_insert(t, a, 3);
     table_insert(t, b, 5);
     table_insert(t, c, 7);
+    table_insert(t, d, 11);
     
-    if (get_node(t, a) == NULL){
-        printf("LEEG\n");
-    }
-    if(table_lookup(t, a) == NULL){
-        printf("LEEG\n");
-    }
+
 
     printf("%d\n",array_get(table_lookup(t, a), 0));
     printf("%d\n",array_get(table_lookup(t, b), 0));
+    printf("%d\n", array_get(table_lookup(t, c), 0));
+    printf("%d\n",array_get(table_lookup(t, d), 0));
 
-}   */
+struct table *t2;
+    printf("\n\n TEST 2\n\n");
+    t2 = table_init(2, 0.6, hash_too_simple);
+    
+
+    char *a2 = malloc(sizeof(char) * 3);
+    memcpy(a2, "ba", sizeof(char) * 3);
+    char *b2 = malloc(sizeof(char) * 3);
+    memcpy(b2, "cd", sizeof(char) * 3);
+    char *c2 = malloc(sizeof(char) * 3);
+    memcpy(c2, "fe", sizeof(char) * 3);
+    char *d2 = malloc(sizeof(char) * 3);
+    memcpy(d2, "gh", sizeof(char) * 3);
+
+    table_insert(t2, a2, 4);
+    table_insert(t2, b2, 9);
+    table_insert(t2, c2, 22);
+    table_insert(t2, d2, 17);
+    
+
+
+    printf("%d\n",array_get(table_lookup(t2, a2), 0));
+    printf("%d\n",array_get(table_lookup(t2, b2), 0));
+    printf("%d\n", array_get(table_lookup(t2, c2), 0));
+    printf("%d\n",array_get(table_lookup(t2, d2), 0));
+
+
+
+
+}   
