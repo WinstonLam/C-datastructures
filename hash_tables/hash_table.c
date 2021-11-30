@@ -75,7 +75,6 @@ static struct node **resize (struct table *t){
     
     if (t == NULL) return NULL;
 
-   
     struct node **old_arr = t->array;
     struct node **new_arr = calloc(t->capacity, sizeof(struct node *));
 
@@ -83,35 +82,26 @@ static struct node **resize (struct table *t){
     t->load = 0;
     
     if (new_arr == NULL) return NULL;
-    
-    unsigned long i = 0;
-    printf("------------------------------------\n");
-    printf("\nInitialize resize\n\n");
-    for (i; i < (t->capacity / 2); i++){
+
+    for (unsigned long  i = 0; i < (t->capacity / 2); i++){
 
         struct node *index = old_arr[i];
 
         if (index == NULL) continue;
         else if (index != NULL){
-            printf("Add node %s to new array\n",old_arr[i]->key);
-            for (unsigned long j; j < array_size(index->value); j++){
+            for (unsigned long j = 0; j < array_size(index->value); j++){
                  
-                
                 table_insert(t, index->key, array_get(index->value, j));
                 
-
                 struct node *next = index->next;
                 
-                    while (next != NULL){
-                        table_insert(t, index->next->key, array_get(index->next->value, j));
-                        next = next->next;
-                        if (next != NULL) printf("next of current = %s\n",next->key);
-                        printf("done\n");
-                    }
+                while (next != NULL){
+                    table_insert(t, next->key, array_get(next->value, j));
+                    next = next->next;
+                }
                 }
             }    
         }
-    
     
     unsigned long k;
     for (k = 0; k < (t->capacity / 2); k++){
@@ -127,23 +117,18 @@ static struct node **resize (struct table *t){
             free(temp);
         }
     }
-    
     free(old_arr);
-
-
     return new_arr;
 }
 
 
 int table_insert(struct table *t, char *key, int value) {
-    printf("Inserting index %s with value %d\n", key, value);
     if (t == NULL) return 1;
 
     // Copy the key given in a string value.
     char* string = malloc((strlen(key) + 1) * sizeof(char));
     if (string == NULL) return 1;
     strcpy(string, key);
-    printf("current load = %f and load factor = %f\n",t->load,table_load_factor(t));
 
     struct node **new_arr;
     // Check if max load factor is reached, if so reallocate the hash table array.  
@@ -155,24 +140,19 @@ int table_insert(struct table *t, char *key, int value) {
             free(string);
             return 1;
         }
-     
         t->array = new_arr;
-        printf("new table load factor %f\n",table_load_factor(t));
-        printf("\nFinish resize\n\n");
-        printf("------------------------------------\n");
-    
     }
 
  
     // Store hashed key in an index that fits in the capacity of the array.
     unsigned long index = t->hash_func((unsigned char *)string) % t->capacity;
-    printf("index is %ld\n", index);
     // Initialize node which is to be added in the hash table since it is not in the table yet.
     struct node *n = node_init(string);
     if (n == NULL) return 1;
     struct node* temp = t->array[index];
     // If index is already in hash table, append value to existing struct node.
     if (temp != NULL){
+        
         
         // In case of bucket collision add node to next pointer.
         if (strcmp(temp->key, key) != 0){
@@ -182,25 +162,23 @@ int table_insert(struct table *t, char *key, int value) {
             temp->next = n;
             array_append(temp->next->value, value);
             t->load++;
-            printf("A: succesfully chained %s to index %s\n",temp->next->key, temp->key);
             return 0;
         } else {
+            array_cleanup(n->value);
+            free(n->key);
+            free(n);
             array_append(temp->value, value);
             t->load++;
-            printf("B: succesfully appended to index %s\n",t->array[index]->key);
             return 0;
         }
         
     }
 
-   
     // Add struct node n to the specified index in the hash table.
     t->array[index] = n;
     // Append value to newly added struct node.
     array_append(t->array[index]->value, value);
     t->load++;
-
-    printf("C: succesfully appended new index %s\n",t->array[index]->key);
     return 0; 
 }
 
@@ -208,28 +186,20 @@ int table_insert(struct table *t, char *key, int value) {
 found in the table then return NULL */
 static struct node *get_node(struct table *t, char *key){
     if (t == NULL) return NULL;
-   
-
-    if (t->array == NULL) {
-        printf("t-array is leeg\n");
-        return NULL;}
-    // Loop through the array of t to check each index.
-    for (unsigned long int i = 0; i < t->capacity; i++){
-
-        if (t->array[i] == NULL) continue;
+    if (t->array == NULL) return NULL;
         
-        struct node *current = t->array[i];
+        // Get the index of the given key with the has function.
+        struct node *current = t->array[t->hash_func((unsigned char *)key) % t->capacity];
+
         // Check for if desired key is chained in the linked list.
         while (current != NULL){
           
-            // Compare key of ith node with given key.
             if (strcmp(current->key, key) == 0){
                 return current;
             }
-            // Update current to next node.
             current = current->next;
         }
-    } 
+    
     return NULL;
 }
 
@@ -253,37 +223,41 @@ int table_delete(struct table *t, char *key) {
 
     if (t->array == NULL) return 1;
 
-    // Loop through the array of t to check each index.
-    for (unsigned long int i = 0; i < t->capacity; i++){
+    // Check if node can be found in the table.
+    if (get_node(t, key) == NULL) return 1;
 
-        if (t->array[i] == NULL) return 1;
-        
-        struct node *current = t->array[i];
-        struct node *prev = current;
-        // Check for if desired key is chained in the linked list.
-        while (current != NULL){
-
-            // Compare key of ith node with given key.
-            if (strcmp(current->key, key) == 0){
-                break;
-            }
-            // Update current to next node.
-            prev = current;
-            current = current->next;
-        }
+    // Get the index of the given key with the has function.
     
-        if (current->next == NULL){
-            prev->next = NULL;
-        } 
-        else if (current == prev){
-            t->array[i] = current->next;
-        }
+    struct node *current = t->array[t->hash_func((unsigned char *)key) % t->capacity];
+    struct node *prev = current;
 
-        free(current->key);
-        array_cleanup(current->value);
-        free(current);
-        return 0;
-    } 
+    // Check for if desired key is chained in the linked list.
+    while (current != NULL){
+
+        // Compare key of ith node with given key.
+        if (strcmp(current->key, key) == 0){
+                
+            // Check if node is at beginning of linked list or has none.
+            if (current == prev)  t->array[t->hash_func((unsigned char *)key) % t->capacity] = current->next;
+            // Check if node is at the end of the linked list.
+            else if (current->next == NULL) prev->next = NULL;
+            else {
+                prev->next = current->next;
+                current->next = NULL;
+            }
+                
+            // Free the values of the node and the noe itself.
+            free(current->key);
+            array_cleanup(current->value);
+            free(current);
+            return 0;
+            }
+
+         // Update current to next node.
+        prev = current;
+        current = current->next;
+        }
+    return 1;
 }
 
 void table_cleanup(struct table *t) {
@@ -309,60 +283,3 @@ void table_cleanup(struct table *t) {
     free(t);
     return;
 }
-void main(){
- struct table *t;
-    printf("\nTEST 1\n\n");
-    t = table_init(2, 0.6, hash_too_simple);
-    
-
-    char *a = malloc(sizeof(char) * 4);
-    memcpy(a, "abc", sizeof(char) * 4);
-    char *b = malloc(sizeof(char) * 4);
-    memcpy(b, "ade", sizeof(char) * 4);
-    char *c = malloc(sizeof(char) * 4);
-    memcpy(c, "afg", sizeof(char) * 4);
-    char *d = malloc(sizeof(char) * 4);
-    memcpy(d, "ahi", sizeof(char) * 4);
-
-    table_insert(t, a, 3);
-    table_insert(t, b, 5);
-    table_insert(t, c, 7);
-    table_insert(t, d, 11);
-    
-
-
-    printf("%d\n",array_get(table_lookup(t, a), 0));
-    printf("%d\n",array_get(table_lookup(t, b), 0));
-    printf("%d\n", array_get(table_lookup(t, c), 0));
-    printf("%d\n",array_get(table_lookup(t, d), 0));
-
-struct table *t2;
-    printf("\n\n TEST 2\n\n");
-    t2 = table_init(2, 0.6, hash_too_simple);
-    
-
-    char *a2 = malloc(sizeof(char) * 3);
-    memcpy(a2, "ba", sizeof(char) * 3);
-    char *b2 = malloc(sizeof(char) * 3);
-    memcpy(b2, "cd", sizeof(char) * 3);
-    char *c2 = malloc(sizeof(char) * 3);
-    memcpy(c2, "fe", sizeof(char) * 3);
-    char *d2 = malloc(sizeof(char) * 3);
-    memcpy(d2, "gh", sizeof(char) * 3);
-
-    table_insert(t2, a2, 4);
-    table_insert(t2, b2, 9);
-    table_insert(t2, c2, 22);
-    table_insert(t2, d2, 17);
-    
-
-
-    printf("%d\n",array_get(table_lookup(t2, a2), 0));
-    printf("%d\n",array_get(table_lookup(t2, b2), 0));
-    printf("%d\n", array_get(table_lookup(t2, c2), 0));
-    printf("%d\n",array_get(table_lookup(t2, d2), 0));
-
-
-
-
-}   

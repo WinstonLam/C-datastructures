@@ -64,11 +64,12 @@ static struct table *create_from_file(char *filename,
         return NULL;
     }
 
-    struct table *hash_table;
-    /* ... SOME CODE MISSING HERE ... */
+    struct table *hash_table = table_init(start_size, max_load, hash_func);
+    if (hash_table == NULL) return NULL;
 
     while (fgets(line, LINE_LENGTH, fp)) {
-        /* ... SOME CODE MISSING HERE ... */
+        
+        printf("%d\n",line[0]);
     }
     fclose(fp);
     free(line);
@@ -85,7 +86,8 @@ static int stdin_lookup(struct table *hash_table) {
     }
 
     while (fgets(line, LINE_LENGTH, stdin)) {
-        /* ... SOME CODE MISSING HERE ... */
+        /*use strtok to get every word use the list of calc_delim for input and use line. and loop to add each word, check prev assignment how it is done.
+         ... SOME CODE MISSING HERE ... */
     }
     free(line);
     return 0;
