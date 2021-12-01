@@ -1,3 +1,18 @@
+/* Name: Winston Lam
+ * Student ID: 11844078
+ * Course: Datastructuren
+ * Institution: University of Amsterdam
+ *
+ * main.c:
+ * DESCRIPION:
+ *    This file takes a file .txt as input and adds each word in that file
+ *    to a hash table with the line on which it appears as a value in it's array.
+ *    Then the user can input a word and a list of line numbers will be shown of where 
+ *    the word appears in the text.
+ * USAGE:
+ *    This function can be used by intializing the programm with a .txt file and then inputing
+ *    a word in the standerdin input.
+ */
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +25,7 @@
 
 #define LINE_LENGTH 256
 
-#define TABLE_START_SIZE 256
+#define TABLE_START_SIZE 2
 #define MAX_LOAD_FACTOR 0.6
 #define HASH_FUNCTION hash_too_simple
 
@@ -64,15 +79,40 @@ static struct table *create_from_file(char *filename,
         return NULL;
     }
 
+    // Initialize hash table and check for memory allocation.
     struct table *hash_table = table_init(start_size, max_load, hash_func);
     if (hash_table == NULL) return NULL;
 
+    // Initialize calc_delim function for line cleanup.
+    char *delim = calc_delim();
+    if (!delim){
+        return NULL;
+    }
+    // Keep count of line number as value for table insertion.
+    int line_number = 0;
+
     while (fgets(line, LINE_LENGTH, fp)) {
-        
-        printf("%d\n",line[0]);
+
+        // Update line number each time a line is read.
+        line_number++;
+
+        // Store token which is cleaned using cleanup_string and calc_delim function.
+        char* token;
+        cleanup_string(line);
+        token = strtok(line, delim);
+
+        // Iterate through the tokens.
+        while (token != NULL){
+            // Insert the tokens into the hash_table with the corresponding line_number.
+            table_insert(hash_table, token, line_number);
+            token = strtok(NULL, delim);
+        } 
     }
     fclose(fp);
+    // Free allocated strings.
+    free(delim);
     free(line);
+    
 
     return hash_table;
 }
@@ -84,11 +124,34 @@ static int stdin_lookup(struct table *hash_table) {
     if (!line) {
         return 1;
     }
+    // Initialize calc_delim function for line cleanup.
+    char *delim = calc_delim();
+    if (!delim){
+        return 1;
+    }
 
     while (fgets(line, LINE_LENGTH, stdin)) {
-        /*use strtok to get every word use the list of calc_delim for input and use line. and loop to add each word, check prev assignment how it is done.
-         ... SOME CODE MISSING HERE ... */
+
+        // Store token which is cleaned using cleanup_string and calc_delim function.
+        char* token;
+        cleanup_string(line);
+        token = strtok(line, delim);
+        
+        // Iterate through the tokens.
+        while (token != NULL){
+            // Get the value array of each token from the hash_table.
+            struct array *values = table_lookup(hash_table, token);
+            printf("%s\n",token);
+            // Loop though the value array and print each line_number.
+            for (unsigned long i = 0; i < array_size(values); i++){
+                printf("* %d\n",array_get(values, i));
+            }
+            printf("\n");
+            token = strtok(NULL, delim);
+        }
     }
+    // Free allocated strings.
+    free(delim);
     free(line);
     return 0;
 }

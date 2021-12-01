@@ -1,3 +1,18 @@
+/* Name: Winston Lam
+ * Student ID: 11844078
+ * Course: Datastructuren
+ * Institution: University of Amsterdam
+ *
+ * array.c:
+ * DESCRIPION:
+ *    In this file all the internal functions of 
+ *    the struct array are defined. Function such as
+ *    Initialization, getting certain values, appending values,
+ *    cleaning the array and retrieving it's size.
+ * USAGE:
+ *    This File can be used by including the header file array.h
+ *    And then calling the functions by passing the right variables.
+ */
 #include <stdlib.h>
 
 #include "array.h"
