@@ -63,7 +63,7 @@ static int heap_insert(struct heap *h, void *p) {
             if(array_set(h->array, parent, p) == -1) return -1;
 
         }
-        // If node is lesser thant the parent. Than simply return.
+        // If node is lesser thant the parent. Then simply return.
         if (parent <= 0){
             if (array_append(h->array, p) == -1) return -1;
             return 0;
@@ -89,29 +89,51 @@ static void *heap_pop(struct heap *h) {
         return h;
     }
 
-    // Pop the first index.
-    free(array_get(h->array, 0));
-
-    // Set the last index to front.
+    // Pop last element in array and replace it with the front.
     array_set(h->array, 0, array_pop(h->array));
-    
-    void *current = array_get(h->array, 1);
-    void *left = array_get(h->array, 2);
-    void *right = array_get(h->array, 3);
+
+    long curr_index = 1;
+    long l_index = 2;
+    long r_index = 3;
     
     for(long i = 0; i < array_size(h->array); i++){
 
+        // Store the three nodes for percolating down.
+        void *current = array_get(h->array, curr_index);
+        void *left = array_get(h->array, l_index);
+        void *right = array_get(h->array, r_index);
+
         // If node is at final spot, not smaller than left child and not larger than right child.
         if (h->compare(current, left) > 0 
-        && h->compare(array_get(h->array, current), array_get(h->array, right)) < 0){
+        && h->compare(current, right) < 0){
             break;
         }
 
         // Check if node is smaller than left child.
-        if (h->compare(array_get(h->array, current), array_get(h->array, left)) < 0 );
+        if (h->compare(current, left) < 0 ){
+            // Set given node on position of its child.
+            if (array_set(h->array, l_index, current) == -1) return NULL;
+            // Set child on postion of given node.
+            if (array_set(h->array, curr_index, left) == -1) return NULL;
+
+            // Update indices to traverse the heap.
+            curr_index = l_index;
+            l_index = curr_index * 2;
+            r_index = l_index + 1;
+        }
 
         // Check if node is larger than right child.
-        if (h->compare(array_get(h->array, current), array_get(h->array, right)) > 0 );
+        if (h->compare(current, right) > 0 ){
+            // Set given node on position of its child.
+            if (array_set(h->array, r_index, current) == -1) return NULL;
+            // Set child on postion of given node.
+            if (array_set(h->array, curr_index, right) == -1) return NULL;
+
+            // Update indices to traverse the heap.
+            curr_index = r_index;
+            l_index = curr_index * 2;
+            r_index = l_index + 1;
+        }
 
     }
     return h;
