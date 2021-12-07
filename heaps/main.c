@@ -23,7 +23,7 @@ static int parse_options(struct config *cfg, int argc, char *argv[]);
 
 typedef struct {
     char *name;
-    /* ... CODE MISSING HERE .... */
+    int age;
 } patient_t;
 
 static int compare_patient_name(const void *a, const void *b) {
@@ -31,7 +31,13 @@ static int compare_patient_name(const void *a, const void *b) {
 }
 
 static int compare_patient_age(const void *a, const void *b) {
-    /* ... CODE MISSING HERE .... */
+    if (a > b){
+        return 1;
+    } 
+    else if (a == b){
+        return 0;
+    }
+    return -1;
 }
 
 int main(int argc, char *argv[]) {
@@ -48,7 +54,14 @@ int main(int argc, char *argv[]) {
     } else {
         queue = prioq_init(&compare_patient_name);
     }
-    /* ... CODE MISSING HERE .... */
+
+    if (queue == NULL){
+        array_cleanup(queue->array, NULL);
+        free(queue);
+        return EXIT_FAILURE; 
+    }
+
+
 
     for (int iterations = 0;;) {
         while (1) {
@@ -58,7 +71,7 @@ int main(int argc, char *argv[]) {
                 /* ... CODE MISSING HERE .... */
                 return EXIT_FAILURE;
             }
-
+            printf("string = %s", s);
             /* ... CODE MISSING HERE .... */
         }
 

@@ -10,7 +10,10 @@ static struct heap *heap_init(int (*compare)(const void *, const void *)) {
     if (h == NULL) return NULL;
     
     struct array* array = array_init(10);
-    if (array == NULL) return NULL;
+    if (array == NULL){
+        free(h);
+        return NULL;
+    }
     h->array = array;
     /* Store the function pointer compare argument in the struct here.
        If the struct pointer is called 'h' the assignment is:
@@ -115,28 +118,27 @@ static long index_child(struct heap *h, long index){
 static void *heap_pop(struct heap *h) {
    
     if (h == NULL) return NULL;
-    if (array_size(h->array) == 0){
+
+    if (array_size(h->array) < 0){
         return NULL;
     }
     // Store the element in array for returning.
+    
     void *elem = array_get(h->array,0);
-    
-    // If heap only has one element.
-    if (array_size(h->array) == 1){
-        // Pop the only index.
-        array_pop(h->array);
-        return elem;
-    }
-    
+
     // Pop last element in array and replace it with the front.
     array_set(h->array, 0, array_pop(h->array));
- /*    printf("index %d\n",  *((int *)array_get(h->array, 0)));
-    printf("size: %ld\n",array_size(h->array)); */
+
+    // If heap only has one element.
+    if (array_size(h->array) <= 1){
+        return elem;
+    }
 
     long curr_index = 0;
     long child_index = index_child(h, curr_index);
     void *current = array_get(h->array, curr_index);
     void *child = array_get(h->array, child_index);
+
 
     while (h->compare(current, child) > 0){
 
@@ -161,26 +163,4 @@ void *prioq_pop(prioq *q) {
 }
 
 
-   int int_compare(const void *a, const void *b) {
-    int x = *((const int *) a);
-    int y = *((const int *) b);
-
-    return x - y;
-}
-void main(){
-
-    prioq *p = prioq_init(int_compare);
-
-    int values[10] = { 5, 7, 2, 4, 0, 9, 12, 13, 28, 1 };
-    int expected[10] = { 0, 1, 2, 4, 5, 7, 9, 12, 13, 28 };
-
-    for (int i = 0; i < 10; i++){
-        prioq_insert(p, values + i);
-       
-    }
-    for (long i = 0; i < 10; i++){
-       printf("pop: %d\n", *((int *) prioq_pop(p))); 
-    } 
-
-
-} 
+  
