@@ -64,10 +64,7 @@ static int heap_insert(struct heap *h, void *p) {
         }
         // If node is lesser than the parent.
         if (h->compare(p, array_get(h->array, parent)) < 0){
-            printf("parent: %ld\n", *((int *) array_get(h->array, parent)));
-            printf("current: %ld\n", *((int *) array_get(h->array, current)));
 
-      
             // Copy parent to end.
             if (array_set(h->array, current, array_get(h->array, parent)) == -1) return -1;
           
@@ -89,6 +86,32 @@ int prioq_insert(prioq *q, void *p) {
 
 }
 
+static long index_child(struct heap *h, long index){
+    if (h == NULL) return -1;
+
+    long l_index = 1;
+    long r_index = 2;
+
+    if (index != 0){
+        l_index = index * 2 + 1;
+        r_index = l_index + 1;
+    }
+    if (l_index == array_size(h->array)) return -1;
+    void *left = array_get(h->array, l_index);
+    void *right = array_get(h->array, r_index);
+
+    if (left == NULL && right == NULL) return -1;
+    else if (left == NULL) return r_index;
+    else if (right == NULL) return l_index;
+
+    if (h->compare(left, right) <= 0){
+            return l_index;
+    } else {
+            return r_index;
+    }
+    return -1;
+}
+
 static void *heap_pop(struct heap *h) {
    
     if (h == NULL) return NULL;
@@ -107,60 +130,38 @@ static void *heap_pop(struct heap *h) {
     
     // Pop last element in array and replace it with the front.
     array_set(h->array, 0, array_pop(h->array));
-  
+ /*    printf("index %d\n",  *((int *)array_get(h->array, 0)));
+    printf("size: %ld\n",array_size(h->array)); */
+
     long curr_index = 0;
-    long l_index = 1;
-    long r_index = 2;
-    
-    for(long i = 0; i < array_size(h->array); i++){
+    long child_index = index_child(h, curr_index);
+    void *current = array_get(h->array, curr_index);
+    void *child = array_get(h->array, child_index);
 
-        // Store the three nodes for percolating down.
-        void *current = array_get(h->array, curr_index);
-        void *left = array_get(h->array, l_index);
-        void *right = array_get(h->array, r_index);
-           
-        // If node is at final spot, not larger than left child or right child.
-        if (right != NULL && left != NULL && h->compare(current, left) <= 0 
-        && h->compare(current, right) <= 0){
-            break;
-        }
- 
-        // Check if node is larger than left child.
-        if (left != NULL && h->compare(current, left) > 0){
-            // Set given node on position of its child.
-            if (array_set(h->array, l_index, current) == -1) return NULL;
-            // Set child on postion of given node.
-            if (array_set(h->array, curr_index, left) == -1) return NULL;
+    while (h->compare(current, child) > 0){
 
-            // Update indices to traverse the heap.
-            curr_index = l_index;
-            l_index = curr_index * 2;
-            r_index = l_index + 1;
-        }
+        if (array_set(h->array, curr_index, child) == -1) return NULL;
 
-        // Check if node is larger than right child.
-        if (right != NULL && h->compare(current, right) > 0 ){
-            // Set given node on position of its child.
-            if (array_set(h->array, r_index, current) == -1) return NULL;
-            // Set child on postion of given node.
-            if (array_set(h->array, curr_index, right) == -1) return NULL;
+        if (array_set(h->array, child_index, current) == -1 ) return NULL;
 
-            // Update indices to traverse the heap.
-            curr_index = r_index;
-            l_index = curr_index * 2;
-            r_index = l_index + 1;
-        }
-        break;
+        curr_index = child_index;
+        child_index = index_child(h, curr_index);
+
+        if (child_index < 0) break;
+
+        current = array_get(h->array, curr_index);
+        child = array_get(h->array, child_index);
     }
     return elem;
 }
+
 
 void *prioq_pop(prioq *q) {
     return heap_pop(q);
 }
 
 
-    int int_compare(const void *a, const void *b) {
+   int int_compare(const void *a, const void *b) {
     int x = *((const int *) a);
     int y = *((const int *) b);
 
@@ -178,9 +179,8 @@ void main(){
        
     }
     for (long i = 0; i < 10; i++){
-       printf("pop: %ld\n", *((int *) array_get(p->array, i))); 
+       printf("pop: %d\n", *((int *) prioq_pop(p))); 
     } 
 
 
-}
- 
+} 
