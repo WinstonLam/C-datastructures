@@ -102,7 +102,7 @@ static long index_child(struct heap *h, long index){
     if (l_index == array_size(h->array)) return -1;
     void *left = array_get(h->array, l_index);
     void *right = array_get(h->array, r_index);
-
+    
     if (left == NULL && right == NULL) return -1;
     else if (left == NULL) return r_index;
     else if (right == NULL) return l_index;

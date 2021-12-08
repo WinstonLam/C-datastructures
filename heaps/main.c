@@ -68,12 +68,44 @@ int main(int argc, char *argv[]) {
             char *s = fgets(buf, BUF_SIZE, stdin);
             if (s == NULL) {
                 fprintf(stderr, "Unexpected end of file. exiting\n");
-                /* ... CODE MISSING HERE .... */
+                array_cleanup(queue->array, NULL);
+                free(queue);
                 return EXIT_FAILURE;
             }
-            printf("string = %s", s);
-            /* ... CODE MISSING HERE .... */
+        
+            char *name, *age, *skip;
+            skip = ".";
+            name = strtok(s, " ");
+
+            if (strcmp(name, skip) == 0) break;
+
+            printf("string = %s\n", name);
+            while (token != NULL){
+                age = token;
+                token = strtok(NULL, " ");
+            }
+            printf("age = %s\n", age);
+            /*void *patient_n;
+            // Set patient name and age
+            // HOW?
+            ((const patient_t *) patient_n)->name;
+            ((const patient_t *) patient_n)->age;
+
+            // Insert patient into the prioq
+            // HOW
+            // Iterate through the tokens.
+            while (token[0] != NULL){
+                if (token[0] == ".") break;
+                // Insert the tokens into the hash_table with the corresponding line_number.
+                prioq_insert(queue, patient_n);
+                token[0] = strtok(NULL, "\n"); 
+            }*/
         }
+        /* void *patient_n;
+        // Pop the patient ordered on 
+        prioq_pop(queue);
+        // print patient name 
+        ((const patient_t *) patient_n)->name; */
 
         printf(".\n"); /* End turn. */
 
