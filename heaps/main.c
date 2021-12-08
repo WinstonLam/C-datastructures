@@ -61,8 +61,6 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE; 
     }
 
-
-
     for (int iterations = 0;;) {
         while (1) {
             char *s = fgets(buf, BUF_SIZE, stdin);
@@ -71,43 +69,78 @@ int main(int argc, char *argv[]) {
                 array_cleanup(queue->array, NULL);
                 free(queue);
                 return EXIT_FAILURE;
+
+            } else if (s[0] == '.') {
+                continue;
             }
-        
-            char *name, *age, *skip;
-            skip = ".";
-            name = strtok(s, " ");
+          /*   // Copy the key given in a string value.
+            char* string = malloc((strlen(key) + 1) * sizeof(char));
+            if (string == NULL) return 1;
+            strcpy(string, key); */
 
-            if (strcmp(name, skip) == 0) break;
+            char *age;
 
-            printf("string = %s\n", name);
+            token = malloc((strlen(s) + 1) * sizeof(char));
+            if (token == NULL){
+                free(token);
+                return EXIT_FAILURE;
+            } 
+
+          /*   strcpy(s, token); */
+            
+            free(token);
+            token = strtok(s, " ");
+            name_cpy = malloc((strlen(token) + 1) * sizeof(char));
+            
+            if (name_cpy == NULL){
+                free(name_cpy);
+                free(token);
+                return EXIT_FAILURE;
+            }
+
+            strcpy(name_cpy, token);
+            printf("name %s\n", name_cpy);
+
             while (token != NULL){
                 age = token;
                 token = strtok(NULL, " ");
             }
-            printf("age = %s\n", age);
-            /*void *patient_n;
-            // Set patient name and age
-            // HOW?
-            ((const patient_t *) patient_n)->name;
-            ((const patient_t *) patient_n)->age;
+            
+            free(token);
 
-            // Insert patient into the prioq
-            // HOW
-            // Iterate through the tokens.
-            while (token[0] != NULL){
-                if (token[0] == ".") break;
-                // Insert the tokens into the hash_table with the corresponding line_number.
-                prioq_insert(queue, patient_n);
-                token[0] = strtok(NULL, "\n"); 
-            }*/
+            printf("age %s\n", age);
+            
+            // Set patient name and age.
+            patient_t *patient_n = malloc(sizeof(patient_t));
+            if (patient_n == NULL){
+                free(name_cpy);
+                free(patient_n);
+            }
+
+            patient_n->name = name_cpy;
+            patient_n->age = atoi(age);
+
+            // Insert the patient.
+            if (prioq_insert(queue, patient_n) != 0) return EXIT_FAILURE;
+            printf("Insertion succeeded\n");
+            
+/* 
+            printf("top %s\n", ((const patient_t *)array_get(queue->array, 0))->name); */
+        
         }
-        /* void *patient_n;
-        // Pop the patient ordered on 
-        prioq_pop(queue);
-        // print patient name 
-        ((const patient_t *) patient_n)->name; */
 
+        
+        patient_t *patient_top = array_get(queue->array, 0);
+        printf("%s\n", patient_top->name);
+        
+        // Pop the patient ordered on name. 
+        prioq_pop(queue);
+
+        // print patient name 
+        printf("%s\n", patient_top->name);
         printf(".\n"); /* End turn. */
+        free(patient_top->name);
+        free(patient_top);
 
         if (++iterations == 10) {
 

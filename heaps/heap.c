@@ -51,7 +51,6 @@ static int heap_insert(struct heap *h, void *p) {
     // Append new node to array.
     if (array_append(h->array, p) == -1) return -1;
     
-    
     long current = array_size(h->array) - 1;
     long parent = (current - 1) / 2;
     
@@ -122,8 +121,8 @@ static void *heap_pop(struct heap *h) {
     if (array_size(h->array) < 0){
         return NULL;
     }
+
     // Store the element in array for returning.
-    
     void *elem = array_get(h->array,0);
 
     // Pop last element in array and replace it with the front.
