@@ -1,18 +1,18 @@
 Carl 22 11
-Bob 68 1
-Albert 35 1
+Bob 68
+Albert 35
 .
-Barbara 40 1
-.
-.
+Barbara 40
 .
 .
 .
 .
-Alice 28 2
 .
 .
-Jim 30 1
-Tom 31 1
-Zoe 29 1
+Alice 28
+.
+.
+Jim 30
+Tom 31
+Zoe 29
 .
