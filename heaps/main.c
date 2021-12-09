@@ -24,6 +24,7 @@ static int parse_options(struct config *cfg, int argc, char *argv[]);
 typedef struct {
     char *name;
     int age;
+    int duration;
 } patient_t;
 
 static int compare_patient_name(const void *a, const void *b) {
@@ -31,19 +32,91 @@ static int compare_patient_name(const void *a, const void *b) {
 }
 
 static int compare_patient_age(const void *a, const void *b) {
-    if (a > b){
-        return 1;
-    } 
-    else if (a == b){
-        return 0;
+    
+    if ((((const patient_t *) a)->age) 
+    - (((const patient_t *) b)->age) == 0){
+        return strcmp(((const patient_t *) a)->name, ((const patient_t *) b)->name);
     }
-    return -1;
+    return (((const patient_t *) a)->age) - (((const patient_t *) b)->age);
+    
 }
+static int print_patients(struct heap *q){
+    if (q == NULL) return 0;
+    if ((array_size(q->array)) == 0) return 0;
+    patient_t *patient_top = array_get(q->array, 0);
+    
+    // Update the prioq after popping the top item.
+    prioq_pop(q);
+
+    if (patient_top->duration && patient_top->duration > 1){
+        int i = 1;
+        while(i < patient_top->duration){
+            printf(".\n");
+            i++;
+        }
+        printf("%s\n", patient_top->name);
+        // print patient name 
+        free(patient_top->name);
+        free(patient_top);
+        return i;
+    }
+    printf("%s\n", patient_top->name);
+    
+    // print patient name 
+    free(patient_top->name);
+    free(patient_top);
+    return 1;
+}
+
+static patient_t *set_info(char *s, char *token, char *name_cpy){
+  
+    // Malloc token and name_cpy and pefrom malloc checks.
+    token = malloc((strlen(s) + 1) * sizeof(char));
+    token = strtok(s, " ");
+        if (token == NULL){
+        free(token);
+        return NULL;
+    } 
+    name_cpy = malloc((strlen(token) + 1) * sizeof(char));
+    if (name_cpy == NULL){
+        free(name_cpy);
+        free(token);
+        return NULL;
+    }
+
+    // Copy token to name_cpy.
+    strcpy(name_cpy, token);
+    
+    // Set all the data from stdin into an array for later use.
+    char *data[3];
+    int i = 0;
+    while (token != NULL){
+        data[i++] = token;
+        token = strtok(NULL, " ");
+    }
+    free(token);
+
+    // Create pointer to struct patient_t for insertion. 
+    patient_t *patient_n = malloc(sizeof(patient_t));
+    if (patient_n == NULL){
+        free(name_cpy);
+        free(patient_n);
+    }
+    // Set patient name and age.
+    patient_n->name = name_cpy;
+    patient_n->age = atoi(data[1]);
+    // If the duration is given set this aswell.
+    if (data[2] != NULL){
+        patient_n->duration = atoi(data[2]);
+    }
+    return patient_n;
+}   
 
 int main(int argc, char *argv[]) {
     char *token, *name_cpy;
     prioq *queue;
     struct config cfg;
+    int waiting = 0;
 
     if (parse_options(&cfg, argc, argv) != 0) {
         return EXIT_FAILURE;
@@ -54,7 +127,7 @@ int main(int argc, char *argv[]) {
     } else {
         queue = prioq_init(&compare_patient_name);
     }
-
+    // Queue malloc check.
     if (queue == NULL){
         array_cleanup(queue->array, NULL);
         free(queue);
@@ -71,87 +144,55 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
 
             } else if (s[0] == '.') {
-                continue;
-            }
-          /*   // Copy the key given in a string value.
-            char* string = malloc((strlen(key) + 1) * sizeof(char));
-            if (string == NULL) return 1;
-            strcpy(string, key); */
-
-            char *age;
-
-            token = malloc((strlen(s) + 1) * sizeof(char));
-            if (token == NULL){
-                free(token);
-                return EXIT_FAILURE;
-            } 
-
-          /*   strcpy(s, token); */
-            
-            free(token);
-            token = strtok(s, " ");
-            name_cpy = malloc((strlen(token) + 1) * sizeof(char));
-            
-            if (name_cpy == NULL){
-                free(name_cpy);
-                free(token);
-                return EXIT_FAILURE;
-            }
-
-            strcpy(name_cpy, token);
-            printf("name %s\n", name_cpy);
-
-            while (token != NULL){
-                age = token;
-                token = strtok(NULL, " ");
+                break;
             }
             
-            free(token);
-
-            printf("age %s\n", age);
-            
-            // Set patient name and age.
-            patient_t *patient_n = malloc(sizeof(patient_t));
+            // Use the set_info function to set the info to the patient from stdin.
+            patient_t *patient_n = set_info(s, token, name_cpy);
             if (patient_n == NULL){
                 free(name_cpy);
                 free(patient_n);
+                return EXIT_FAILURE;
             }
-
-            patient_n->name = name_cpy;
-            patient_n->age = atoi(age);
-
-            // Insert the patient.
-            if (prioq_insert(queue, patient_n) != 0) return EXIT_FAILURE;
-            printf("Insertion succeeded\n");
-            
-/* 
-            printf("top %s\n", ((const patient_t *)array_get(queue->array, 0))->name); */
         
+            // Insert the patient into the prioq.
+            if (prioq_insert(queue, patient_n) != 0){
+                free(name_cpy);
+                free(patient_n);
+                return EXIT_FAILURE;
+            } 
+
         }
-
-        
-        patient_t *patient_top = array_get(queue->array, 0);
-        printf("%s\n", patient_top->name);
-        
-        // Pop the patient ordered on name. 
-        prioq_pop(queue);
-
-        // print patient name 
-        printf("%s\n", patient_top->name);
-        printf(".\n"); /* End turn. */
-        free(patient_top->name);
-        free(patient_top);
-
         if (++iterations == 10) {
-
-            /* ... CODE MISSING HERE .... */
-
+            while ((array_size(queue->array) != 0)){
+                print_patients(queue);
+            }
             break;
         }
+
+        // If max hours is reached continue iterations till breakpoint.
+        printf("turn: %d\n", waiting);
+        if ((waiting + 1) == 10) {
+            continue;
+        }
+        
+        
+        if (array_size(queue->array) == 0){
+            waiting += 1;
+        } else{            
+            int i = print_patients(queue);
+            
+            if(i > 1){
+                waiting += (i - 1);
+            }
+            waiting += 1; 
+        }
+        printf(".\n"); /* End turn. */
+      
     }
 
-    /* ... CODE MISSING HERE .... */
-
+  
+    prioq_cleanup(queue, NULL);
     return EXIT_SUCCESS;
 }
 
