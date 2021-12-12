@@ -42,17 +42,31 @@ static int compare_patient_age(const void *a, const void *b) {
 }
 static int print_patients(struct heap *q){
     if (q == NULL) return 0;
-    
-    if ((array_size(q->array)) == 0) return 2;
+    if ((array_size(q->array)) == 0) return 0;
     patient_t *patient_top = array_get(q->array, 0);
+    
+    // Update the prioq after popping the top item.
+    prioq_pop(q);
 
     if (patient_top->duration && patient_top->duration > 1){
-        patient_top->duration -= 1;
-        return 2;
+        int i = 1;
+        while(i < patient_top->duration){
+            printf(".\n");
+            i++;
+        }
+        printf("%s\n", patient_top->name);
+        // print patient name 
+        free(patient_top->name);
+        free(patient_top);
+        return i;
     }
+    printf("%s\n", patient_top->name);
     
+    // print patient name 
+    free(patient_top->name);
+    free(patient_top);
     return 1;
-    }
+}
 
 static patient_t *set_info(char *s){
   
@@ -91,7 +105,7 @@ static patient_t *set_info(char *s){
 }   
 
 int main(int argc, char *argv[]) {
-    patient_t *in_treatment = NULL;
+    int x = 0;
     prioq *queue;
     struct config cfg;
 
@@ -138,25 +152,20 @@ int main(int argc, char *argv[]) {
             } 
 
         }
-        if (in_treatment != NULL){
-            if(--in_treatment->duration == 0){
-                printf("%s\n", in_treatment->name);
-                in_treatment = NULL;
-                
-            }
+        if (x > 1){
             printf(".\n"); /* End turn. */
             continue;
         }
         patient_t *patient_n = array_get(queue->array, 0);
-
+        if (patient_n->duration > 1) {
+            x = patient_n->duration;
+        }
         int print = print_patients(queue);
 
         if (print == 0){
             prioq_cleanup(queue, NULL);
             return EXIT_FAILURE;
-        } else if (print == 2) {
-            in_treatment = patient_n;
-        } else {
+        } else if (print == 1) {
 
             printf("%s\n", patient_n->name);
             // Update the prioq after popping the top item.
@@ -178,6 +187,7 @@ int main(int argc, char *argv[]) {
                 p = prioq_pop(queue);
             }
             break;
+        
         }
     }
     prioq_cleanup(queue, NULL);
