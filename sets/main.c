@@ -24,6 +24,7 @@ int main(void) {
     struct set *s = set_init(0);   /* initialize set with turbo turned off. */
     if (s == NULL) {
         free(buf);
+        set_cleanup(s);
         return EXIT_FAILURE;
     }
 
@@ -52,6 +53,7 @@ int main(void) {
         switch (*command) {
             case '+':
                 if (set_insert(s, num) == -1) {
+                    set_cleanup(s);
                     return EXIT_FAILURE;
                 }
                 continue;

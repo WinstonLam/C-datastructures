@@ -14,7 +14,6 @@ struct node {
     struct node *lhs;
     struct node *rhs;
     int balance_factor;
-    int height;
 };
 typedef struct node node;
 
@@ -33,7 +32,6 @@ static node *make_node(int data) {
     n->data = data;
     n->lhs = NULL;
     n->rhs = NULL;
-    n->height = 0;
     return n;
 }
 
@@ -72,33 +70,67 @@ void tree_dot(struct tree *tree, char *filename) {
     fclose(dotf);
 }
 
+static int get_height(node *n) {
+
+    if (n == NULL) {
+        return -1;
+    }
+    
+    int left = get_height(n->lhs);
+    int right = get_height(n->rhs);
+
+    if (left > right) {
+        return left + 1;
+    }
+    else {
+        return right + 1;
+    }
+    return 0;
+}
+
 int tree_check(struct tree *tree) {
     if (tree == NULL) {
         printf("No tree found\n");
         return 1;
     }
-    // Check if turbo is on.
+
+    if (tree->root == NULL) {
+        printf("Tree is empty\n");
+        return 1;
+    }
+    /* // Check if turbo is on.
     if (tree->turbo == 0) {
         printf("Turbo is not on\n");
-    }
+    } */
 
     // See if the tree is balanced accoring to the invarient.
     node *root = tree->root;
-    int invarient = root->lhs->height - root->rhs->height;
+    int invarient = 0;
 
-    if (abs(invarient) > 1) {
-        printf("Over max invarient of 1\n");
-        return 1;
+    if (root->lhs == NULL) {
+        invarient = (get_height(root->rhs)) * -1;
+    }
+    else if (root->rhs == NULL) {
+        invarient = (get_height(root->lhs));
+    }
+    else if (root->lhs != NULL && root->rhs != NULL) {
+        invarient = get_height(root->lhs) - get_height(root->rhs);
     }
 
-    // See how the tree is balanced based on invarient value.
+
+    /* if (abs(invarient) > 1) {
+        printf("Over max invarient of 1\n");
+        return 1;
+    } */
+
+    /* // See how the tree is balanced based on invarient value.
     if (invarient > 0) {
         printf("Tree is balanced, but left heavy.\n");
     } else if (invarient < 0 ) {
         printf("Tree is balanced, but right heavy.\n");
     } else {
         printf("Tree is perfectly balanced. (as all thing should be)\n");
-    }
+    } */
 
     return 0;
 }
@@ -140,28 +172,34 @@ int tree_insert(struct tree *tree, int data) {
 
     // Node n used as pointer to traverse the tree.
     node *n = tree->root;   
-
-    while (data < n->data) {
-        if (n->lhs == NULL) {
-            n->lhs = new;
-            return 0;
+    while (tree_find(tree, data) != 1) {
+        while (data < n->data) {
+            
+            if (n->lhs == NULL) {
+                n->lhs = new;
+                return 0;
+            }
+            n = n->lhs;
         }
-        n = n->lhs;
-    }
-
-    while (data >= n->data) {
-        if (n->rhs == NULL) {
-            n->rhs = new;
-            return 0;
+        
+        while (data >= n->data) {
+           
+            if (n->rhs == NULL) {
+                n->rhs = new;
+                return 0;
+            }
+            n = n->rhs;
+          
         }
-        n = n->rhs;
     }
+    free(new);
     return -1;
 }
 
 int tree_find(struct tree *tree, int data) {
     if (tree == NULL) return 0;
     // Node n used as pointer to traverse the tree.
+    
     node *n = tree->root;
     if (n == NULL) return 0;
     // If the data is at root node.
@@ -270,7 +308,7 @@ int tree_remove(struct tree *tree, int data) {
     
     /* Use the recusive functions delete_node 
     to traverse the tree and delete the node. */
-    if (delete_node(tree->root, data) == NULL) return 1;
+    if (delete_node(tree->root, data) == NULL) return 0;
 
     return 0;
 }
