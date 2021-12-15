@@ -22,6 +22,10 @@ int main(void) {
         return EXIT_FAILURE;
     }
     struct set *s = set_init(0);   /* initialize set with turbo turned off. */
+    if (s == NULL) {
+        free(buf);
+        return EXIT_FAILURE;
+    }
 
     /* ... SOME CODE MISSING HERE ... */
 
@@ -44,8 +48,26 @@ int main(void) {
                 exit_failure(buf, s);
             }
         }
+
         switch (*command) {
-            /* ... SOME CODE MISSING HERE ... */
+            case '+':
+                if (set_insert(s, num) == -1) {
+                    return EXIT_FAILURE;
+                }
+                continue;
+            case '-':
+                set_remove(s, num);
+                continue;
+            case '?':
+                if (set_find(s, num) == 1) {
+                    printf("found: %d\n", num);
+                } else {
+                    printf("not found: %d\n", num);
+                } 
+                continue;
+            case 'p':
+                set_print(s);    
+                continue;   
         }
     }
 

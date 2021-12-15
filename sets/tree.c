@@ -6,14 +6,14 @@
 
 struct tree {
     struct node *root;
-    int balance_factor;
+    int turbo;
 };
 
 struct node {
     int data;
     struct node *lhs;
     struct node *rhs;
-
+    int balance_factor;
     int height;
 };
 typedef struct node node;
@@ -78,9 +78,8 @@ int tree_check(struct tree *tree) {
         return 1;
     }
     // Check if turbo is on.
-    if (tree->balance_factor == 0) {
+    if (tree->turbo == 0) {
         printf("Turbo is not on\n");
-        return 1;
     }
 
     // See if the tree is balanced accoring to the invarient.
@@ -109,17 +108,15 @@ struct tree *tree_init(int turbo) {
     // Malloc tree and perform malloc check.
     struct tree *t = malloc(sizeof(struct tree));
     if (t == NULL){
-        printf("NULL\n");
-        free(t);
         return NULL;
     }
     
     // Set root as NULL
     t->root = NULL;
-    t->balance_factor = 0;
+    t->turbo = 0;
     // If turbo is on set balance factor to 1;
     if (turbo == 1) {
-        t->balance_factor = 1;
+        t->turbo = 1;
     }
     return t;
 }
@@ -127,12 +124,19 @@ struct tree *tree_init(int turbo) {
 int tree_insert(struct tree *tree, int data) {
     if (tree == NULL) return -1;
 
-    // If data was already in the tree then just return.
-    if (tree_find(tree, data) == 1) return 1;
-
     // Malloc the new node and perform malloc check.
     node *new = make_node(data);
     if (new == NULL) return -1;
+
+    if (tree->root == NULL) {
+        tree->root = new;
+        return 0;
+    }
+    // If data was already in the tree then just return.
+    if (tree_find(tree, data) == 1) {
+        free(new);
+        return 1;
+    }
 
     // Node n used as pointer to traverse the tree.
     node *n = tree->root;   
@@ -204,7 +208,9 @@ static node *delete_node(node *root, int data) {
     /* Use recurssion to set the link correctly 
     for parent node upon deletion. */
     if (root == NULL) return NULL;
-    else if (data < root->data) {
+
+   
+    if (data < root->data) {
         root->lhs = delete_node(root->lhs, data);
     } else if (data > root->data) {
         root->rhs = delete_node(root->rhs, data);
@@ -248,6 +254,19 @@ int tree_remove(struct tree *tree, int data) {
     if (tree == NULL) return 1;
     // If data is not in the tree.
     if (tree_find(tree, data) == 0) return 1;
+
+    node *root = tree->root;
+    if (data == root->data) {
+        node *min = min_right(root);
+        if (min == NULL) {
+            tree->root = root->lhs;
+            free(root);
+            return 0;
+        }
+        root->data = min->data;
+        // Use recursion to delete the extra node.
+        root->rhs = delete_node(root->rhs, min->data);
+    }
     
     /* Use the recusive functions delete_node 
     to traverse the tree and delete the node. */
@@ -297,5 +316,6 @@ void tree_cleanup(struct tree *tree) {
     if (tree == NULL) return;
 
     delete_all(tree->root);
+    free(tree);
     return;
 }
