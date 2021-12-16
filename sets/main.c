@@ -1,3 +1,20 @@
+/* Name: Winston Lam
+ * Student ID: 11844078
+ * Course: Datastructuren
+ * Institution: University of Amsterdam
+ *
+ * main.c:
+ * DESCRIPION:
+ *    This file makes an bst based on user input.
+ *    It can insert, remove, lookup and print out the tree.
+ *    If the tree is initialized using turbo. It will output
+ *    A tree which is self balancing.
+ * 
+ * USAGE:
+ *    This File can be used by running it and writing command prompts
+ *    in the stdin.
+ */
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,23 +38,24 @@ int main(void) {
         perror("Could not allocate input buffer");
         return EXIT_FAILURE;
     }
-    struct set *s = set_init(0);   /* initialize set with turbo turned off. */
+
+    // Intialize set, here turbo is switched on.
+    struct set *s = set_init(1);   
     if (s == NULL) {
         free(buf);
         set_cleanup(s);
         return EXIT_FAILURE;
     }
-
-    /* ... SOME CODE MISSING HERE ... */
-
+  
     while (fgets(buf, BUF_SIZE, stdin)) {
         char *endptr;
         char *command;
         char *num_str;
-        int num;
+        int num = 0;
+        int insert = -1;
 
-        command = strtok(buf, " ");     /* get command: +,-,?,p */
-        if (strchr("+-?", *command)) {  /* operation with operand */
+        command = strtok(buf, " ");    
+        if (strchr("+-?", *command)) { 
             num_str = strtok(NULL, "\n");
             if (!num_str) {
                 printf("set operation '%c' requires integer operand\n", *command);
@@ -49,26 +67,37 @@ int main(void) {
                 exit_failure(buf, s);
             }
         }
-
+        
         switch (*command) {
+            // If command is + perform an insert.
             case '+':
-                if (set_insert(s, num) == -1) {
+                insert = set_insert(s, num);
+                // If insert fails return exit.
+                if (insert == -1) {
                     set_cleanup(s);
                     return EXIT_FAILURE;
                 }
+                // If node is already in the tree just skip.
+                else if(insert == 1) {
+                    continue;
+                }
                 continue;
+            // If the command is - perform a deletion.   
             case '-':
                 set_remove(s, num);
                 continue;
+            // If the command is ? perform a lookup.
             case '?':
+                // Check if data is found or not.
                 if (set_find(s, num) == 1) {
                     printf("found: %d\n", num);
                 } else {
                     printf("not found: %d\n", num);
                 } 
                 continue;
+            // If the command is p print the tree in sorted order.
             case 'p':
-                set_print(s);    
+                set_print(s);  
                 continue;   
         }
     }
